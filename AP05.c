@@ -12,16 +12,16 @@ struct Node {
     Node(int k) : key(k), left(nullptr), right(nullptr), height(0) {}
 };
 
-int height(Node* node) {
+int getHeight(Node* node) {
     return node ? node->height : -1;
 }
 
-int balanceFactor(Node* node) {
-    return height(node->right) - height(node->left);
+int getBalance(Node* node) {
+    return getHeight(node->right) - getHeight(node->left);
 }
 
 void updateHeight(Node* node) {
-    node->height = max(height(node->left), height(node->right)) + 1;
+    node->height = max(getHeight(node->left), getHeight(node->right)) + 1;
 }
 
 Node* rotateRight(Node* y) {
@@ -50,15 +50,14 @@ Node* rotateLeft(Node* x) {
 
 Node* balance(Node* node) {
     updateHeight(node);
-    int bf = balanceFactor(node);
+    int bf = getBalance(node);
 
     if (bf == -2) {
-        if (balanceFactor(node->left) > 0)
+        if (getBalance(node->left) > 0)
             node->left = rotateLeft(node->left);
         return rotateRight(node);
-    }
-    if (bf == 2) {
-        if (balanceFactor(node->right) < 0)
+    } else if (bf == 2) {
+        if (getBalance(node->right) < 0)
             node->right = rotateRight(node->right);
         return rotateLeft(node);
     }
@@ -109,11 +108,11 @@ bool search(Node* root, int key) {
     return key < root->key ? search(root->left, key) : search(root->right, key);
 }
 
-void findRange(Node* root, int low, int high, vector<int>& result) {
+void findInRange(Node* root, int low, int high, vector<int>& result) {
     if (!root) return;
-    if (root->key >= low) findRange(root->left, low, high, result);
+    if (root->key >= low) findInRange(root->left, low, high, result);
     if (root->key >= low && root->key <= high) result.push_back(root->key);
-    if (root->key <= high) findRange(root->right, low, high, result);
+    if (root->key <= high) findInRange(root->right, low, high, result);
 }
 
 Node* findNode(Node* root, int key) {
@@ -123,7 +122,7 @@ Node* findNode(Node* root, int key) {
 
 void printHeights(Node* node) {
     if (!node) return;
-    cout << height(node) << ", " << height(node->left) << ", " << height(node->right) << endl;
+    cout << getHeight(node) << ", " << getHeight(node->left) << ", " << getHeight(node->right) << endl;
 }
 
 void freeTree(Node* root) {
@@ -156,20 +155,25 @@ int main() {
     else
         printHeights(root);
 
-    // Entrada 3 (faixa de pesquisa)
+    // Entrada 3
     int a, b;
     cin >> a >> b;
+
     vector<int> faixa;
-    findRange(root, a, b, faixa);
+    findInRange(root, a, b, faixa);
 
     if (faixa.empty()) {
         cout << "NADA A EXIBIR" << endl;
     } else {
         sort(faixa.begin(), faixa.end());
-        for (int v : faixa) cout << v << (v == faixa.back() ? "\n" : ", ");
+        for (size_t i = 0; i < faixa.size(); ++i) {
+            cout << faixa[i];
+            if (i != faixa.size() - 1) cout << ", ";
+        }
+        cout << endl;
         for (int v : faixa) {
             Node* n = findNode(root, v);
-            cout << height(n) << ", " << height(n->left) << ", " << height(n->right) << endl;
+            cout << getHeight(n) << ", " << getHeight(n->left) << ", " << getHeight(n->right) << endl;
         }
     }
 
