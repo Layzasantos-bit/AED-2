@@ -1,8 +1,4 @@
-/*
- * AED2 2025 (1S) - AP06 - ABBS BALANCEADAS
- * Comparação entre Árvores AVL e Vermelho-Pretas
- * Implementação em C
- */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,31 +8,29 @@
 
 typedef int tipochave;
 
-// Estrutura do nó para AVL
 typedef struct noAVL {
     tipochave chave;
     struct noAVL *esq, *dir;
     int h;
 } noAVL;
 
-// Estrutura do nó para Red-Black Tree
+
 typedef struct noRBT {
     tipochave chave;
     struct noRBT *esq, *dir, *pai;
     int cor;
 } noRBT;
 
-// Variáveis globais para contar operações
+
 int rotacoesAVL = 0;
 int rotacoesRBT = 0;
 int trocasCor = 0;
 
-// Função auxiliar
+
 int max(int a, int b) { 
     return a > b ? a : b; 
 }
 
-// Funções para AVL
 int alturaAVL(noAVL *raiz) { 
     return raiz ? raiz->h : -1; 
 }
@@ -101,13 +95,13 @@ noAVL *insereAVL(noAVL *raiz, tipochave ch) {
             }
         }
     }
-    // Não insere duplicatas - apenas retorna a raiz
+   
     
     raiz->h = max(alturaAVL(raiz->esq), alturaAVL(raiz->dir)) + 1;
     return raiz;
 }
 
-// Funções para Red-Black Tree
+
 noRBT *novoNoRBT(tipochave chave) {
     noRBT *no = (noRBT*)malloc(sizeof(noRBT));
     no->chave = chave;
@@ -200,7 +194,7 @@ noRBT *insereRBT(noRBT *raiz, tipochave chave) {
         } else if (chave > x->chave) {
             x = x->dir;
         } else {
-            // Chave já existe - não insere duplicata
+
             free(z);
             return raiz;
         }
@@ -231,7 +225,7 @@ int alturaNegra(noRBT *raiz) {
     return alt + (raiz->cor == BLACK ? 1 : 0);
 }
 
-// Funções para liberar memória
+
 void liberaAVL(noAVL *raiz) {
     if (raiz) {
         liberaAVL(raiz->esq);
@@ -253,32 +247,31 @@ int main() {
     noAVL *raizAVL = NULL;
     noRBT *raizRBT = NULL;
     
-    // Leitura da entrada e inserção nas árvores
+  
     while (scanf("%d", &ch)) {
         if (ch < 0) break;
         raizAVL = insereAVL(raizAVL, ch);
         raizRBT = insereRBT(raizRBT, ch);
     }
     
-    // Cálculo das alturas da AVL
+    
     int hAVL = alturaAVL(raizAVL);
     int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) + 1 : 0;
     int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
     printf("%d, %d, %d\n", hAVL + 1, heAVL, hdAVL);
     
-    // Cálculo das alturas da RBT
+    
     int hRBT = alturaRBT(raizRBT);
     int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
     int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
     printf("%d, %d, %d\n", hRBT + 1, heRBT, hdRBT);
     
-    // Altura negra
+  
     printf("%d\n", alturaNegra(raizRBT));
     
-    // Contadores
+
     printf("%d, %d, %d\n", trocasCor, rotacoesRBT, rotacoesAVL);
-    
-    // Liberação da memória
+   
     liberaAVL(raizAVL);
     liberaRBT(raizRBT);
     
