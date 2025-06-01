@@ -46,9 +46,7 @@ int altura(const node *n) {
 
 int fator_bal(const node *n) {
     if (!n) return 0;
-    int ae = n->esq ? altura(n->esq) : 0;
-    int ad = n->dir ? altura(n->dir) : 0;
-    return ae - ad;
+    return altura(n->esq) - altura(n->dir);
 }
 
 int rotacoes_avl = 0;
@@ -61,7 +59,7 @@ node *rotacionar_esq_esq(node *n) {
     return e;
 }
 
-node *rotationar_esq_dir(node *n) {
+node *rotacionar_esq_dir(node *n) {
     rotacoes_avl++;
     node *e = n->esq;
     node *d = e->dir;
@@ -91,29 +89,6 @@ node *rotacionar_dir_dir(node *n) {
     return d;
 }
 
-node *balancear_node_mod(node *n) {
-    if (!n) return NULL;
-    n->esq = balancear_node_mod(n->esq);
-    n->dir = balancear_node_mod(n->dir);
-    int f = fator_bal(n);
-    if (f >= 2) {
-        if (fator_bal(n->esq) <= -1)
-            return rotationar_esq_dir(n);
-        else
-            return rotacionar_esq_esq(n);
-    } else if (f <= -2) {
-        if (fator_bal(n->dir) >= 1)
-            return rotacionar_dir_esq(n);
-        else
-            return rotacionar_dir_dir(n);
-    }
-    return n;
-}
-
-void balancear_tree_mod(tree *t) {
-    t->raiz = balancear_node_mod(t->raiz);
-}
-
 node *inserir_avl_rec(node *raiz, int valor) {
     if (!raiz) return init_node(valor);
 
@@ -125,10 +100,9 @@ node *inserir_avl_rec(node *raiz, int valor) {
         return raiz; // ignora duplicata
 
     int f = fator_bal(raiz);
-
     if (f >= 2) {
         if (fator_bal(raiz->esq) <= -1)
-            return rotationar_esq_dir(raiz);
+            return rotacionar_esq_dir(raiz);
         else
             return rotacionar_esq_esq(raiz);
     } else if (f <= -2) {
@@ -163,7 +137,8 @@ int rotacoes_avp = 0, mudancas_cor_avp = 0;
 
 Node *make_t_nill() {
     Node *n = calloc(1, sizeof(Node));
-    n->color = 1; n->key = 1000;
+    n->color = 1;
+    n->key = 1000;
     n->left = n->right = n->parent = n;
     return n;
 }
@@ -193,7 +168,7 @@ int left_rotate(Node *x, Tree *t) {
     rotacoes_avp++;
     Node *y = x->right;
     x->right = y->left;
-    if (y->left && y->left->key != 1000) y->left->parent = x;
+    if (y->left->key != 1000) y->left->parent = x;
     y->left = x;
     y->parent = x->parent;
     x->parent = y;
@@ -207,7 +182,7 @@ int right_rotate(Node *x, Tree *t) {
     rotacoes_avp++;
     Node *y = x->left;
     x->left = y->right;
-    if (y->right && y->right->key != 1000) y->right->parent = x;
+    if (y->right->key != 1000) y->right->parent = x;
     y->right = x;
     y->parent = x->parent;
     x->parent = y;
@@ -280,14 +255,15 @@ int insert_node_conta(Tree *t, int key, Node *t_nill) {
     return RB_insert_fixup_conta(z, t);
 }
 
-// ------------------------------ Main ------------------------------
+// ------------------------------ MAIN ------------------------------
 int main() {
     tree *avl = init_tree();
     Node *t_nill = make_t_nill();
     Tree *avp = make_tree(t_nill);
 
     int x;
-    while (scanf("%d", &x) && x >= 0) {
+    while (scanf("%d", &x) == 1) {
+        if (x < 0) break;
         inserir_mod(avl, x);
         insert_node_conta(avp, x, t_nill);
     }
@@ -300,13 +276,17 @@ int main() {
     int hrd = altura_no(avp->root->right, t_nill);
     int hnegra = altura_negra(avp->root, t_nill);
 
-    printf("%d, %d, %d\n", ha, hae, had);
+    // Linha 1 (agora AVP)
     printf("%d, %d, %d\n", hr, hre, hrd);
+    // Linha 2 (agora AVL)
+    printf("%d, %d, %d\n", ha, hae, had);
+    // Linha 3 (altura negra da AVP)
     printf("%d\n", hnegra);
+    // Linha 4 (contadores: mudança de cor AVP, rotações AVP, rotações AVL)
     printf("%d, %d, %d\n", mudancas_cor_avp, rotacoes_avp, rotacoes_avl);
 
     liberar_memoria(avl);
-    // Você pode liberar t_nill e avp se desejar também
-
+    free(t_nill);
+    free(avp);
     return 0;
 }
