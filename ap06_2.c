@@ -269,26 +269,22 @@ int main() {
     }
 
     /* Cálculo e impressão das alturas da AVL */
-    int hAVL = alturaAVL(raizAVL) + 1;           
+    int hAVL = alturaAVL(raizAVL) + 1;
     int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) + 1 : 0;
     int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
-    printf("%d, %d, %d
-", hAVL, heAVL, hdAVL);
+    printf("%d, %d, %d\n", hAVL, heAVL, hdAVL);
 
     /* Cálculo e impressão das alturas da RBT */
     int hRBT = alturaRBT(raizRBT) + 1;
     int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
     int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
-    printf("%d, %d, %d
-", hRBT, heRBT, hdRBT);
+    printf("%d, %d, %d\n", hRBT, heRBT, hdRBT);
 
     /* Altura negra da RBT */
-    printf("%d
-", alturaNegra(raizRBT));
+    printf("%d\n", alturaNegra(raizRBT));
 
     /* Contadores finais: trocas de cor RBT, rotações RBT, rotações AVL */
-    printf("%d, %d, %d
-", trocasCor, rotacoesRBT, rotacoesAVL);
+    printf("%d, %d, %d\n", trocasCor, rotacoesRBT, rotacoesAVL);
 
     return 0;
 }
