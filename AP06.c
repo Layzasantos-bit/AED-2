@@ -18,7 +18,7 @@ typedef struct noRBT {
     int cor;
 } noRBT;
 
-// ================= AVL =================
+
 
 int max(int a, int b) {
     return a > b ? a : b;
@@ -93,7 +93,7 @@ noAVL *insereAVL(noAVL *raiz, tipochave ch) {
     return raiz;
 }
 
-// ================= RBT =================
+
 
 int rotacoesRBT = 0, trocasCor = 0;
 
@@ -216,7 +216,7 @@ int alturaSubAVL(noAVL *raiz) {
     return alturaAVL(raiz);
 }
 
-// ================= MAIN =================
+
 
 int main() {
     tipochave ch;
@@ -229,8 +229,16 @@ int main() {
         raizRBT = insereRBT(raizRBT, ch);
     }
 
-    printf("%d, %d, %d\n", alturaAVL(raizAVL), alturaAVL(raizAVL->esq), alturaAVL(raizAVL->dir));
-    printf("%d, %d, %d\n", alturaRBT(raizRBT), alturaRBT(raizRBT->esq), alturaRBT(raizRBT->dir));
+    int hAVL = alturaAVL(raizAVL);
+    int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) : 0;
+    int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) : 0;
+    printf("%d, %d, %d\n", hAVL, heAVL, hdAVL);
+
+    int hRBT = alturaRBT(raizRBT);
+    int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) : 0;
+    int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) : 0;
+    printf("%d, %d, %d\n", hRBT, heRBT, hdRBT);
+
     printf("%d\n", alturaNegra(raizRBT));
     printf("%d, %d, %d\n", trocasCor, rotacoesRBT, rotacoesAVL);
     return 0;
