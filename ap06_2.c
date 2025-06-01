@@ -1,290 +1,206 @@
-/*
- AP06 - Árvores AVL e Vermelho-Preto
- Implementação em C conforme especificado no material do curso
- Entrada: sequência de inteiros positivos, termina com inteiro negativo
- Saída:
-   1) Altura total da árvore AVL, altura da subárvore esquerda e direita da raiz
-   2) Altura total da árvore Vermelho-Preto, altura da subárvore esquerda e direita da raiz
-   3) Altura negra da árvore Vermelho-Preto a partir da raiz
-   4) Total de trocas de cor na RBT, total de rotações na RBT e total de rotações na AVL
-*/
-
+// Inclusões necessárias
 #include <stdio.h>
 #include <stdlib.h>
+#include "avl.h"
+#include "tree_red_black.h"
 
-#define RED 1    /* Cor vermelha em RBT */
-#define BLACK 0  /* Cor preta em RBT */
+// Contadores globais
+int rotacoes_avl = 0;
+int rotacoes_avp = 0;
+int mudancas_cor_avp = 0;
 
-typedef int tipochave;  /* Tipo de chave para nós das árvores */
-
-/* Estrutura de nó para árvore AVL */
-typedef struct noAVL {
-    tipochave chave;
-    struct noAVL *esq, *dir;
-    int h;  /* Altura do nó (distância até folha mais distante) */
-} noAVL;
-
-/* Estrutura de nó para árvore Vermelho-Preto (RBT) */
-typedef struct noRBT {
-    tipochave chave;
-    struct noRBT *esq, *dir, *pai;
-    int cor;  /* RED ou BLACK */
-} noRBT;
-
-/* Retorna o máximo entre dois inteiros */
-int max(int a, int b) { return a > b ? a : b; }
-
-/* ================= Funções AVL ================= */
-
-/* Retorna a altura do nó ou -1 se for NULL */
-int alturaAVL(noAVL *raiz) {
-    return raiz ? raiz->h : -1;
+// Wrappers com contadores para AVL
+node *rotacionar_esq_esq_conta(node *node_ptr) {
+    rotacoes_avl++;
+    return rotacionar_esq_esq(node_ptr);
 }
 
-int rotacoesAVL = 0;  /* Contador de rotações realizadas na AVL */
-
-/* Rotação simples à direita em k2 (caso LL) */
-noAVL *rotacaoDireitaAVL(noAVL *k2) {
-    noAVL *k1 = k2->esq;
-    k2->esq = k1->dir;
-    k1->dir = k2;
-    /* Atualiza alturas após rotação */
-    k2->h = max(alturaAVL(k2->esq), alturaAVL(k2->dir)) + 1;
-    k1->h = max(alturaAVL(k1->esq), alturaAVL(k1->dir)) + 1;
-    rotacoesAVL++;
-    return k1;
+node *rotationar_esq_dir_conta(node *node_ptr) {
+    rotacoes_avl++;
+    return rotationar_esq_dir(node_ptr);
 }
 
-/* Rotação simples à esquerda em k1 (caso RR) */
-noAVL *rotacaoEsquerdaAVL(noAVL *k1) {
-    noAVL *k2 = k1->dir;
-    k1->dir = k2->esq;
-    k2->esq = k1;
-    /* Atualiza alturas após rotação */
-    k1->h = max(alturaAVL(k1->esq), alturaAVL(k1->dir)) + 1;
-    k2->h = max(alturaAVL(k2->esq), alturaAVL(k2->dir)) + 1;
-    rotacoesAVL++;
-    return k2;
+node *rotacionar_dir_dir_conta(node *node_ptr) {
+    rotacoes_avl++;
+    return rotacionar_dir_dir(node_ptr);
 }
 
-/* Rotação dupla esquerda-direita (caso LR) */
-noAVL *rotacaoEsqDirAVL(noAVL *raiz) {
-    raiz->esq = rotacaoEsquerdaAVL(raiz->esq);
-    return rotacaoDireitaAVL(raiz);
+node *rotacionar_dir_esq_conta(node *node_ptr) {
+    rotacoes_avl++;
+    return rotacionar_dir_esq(node_ptr);
 }
 
-/* Rotação dupla direita-esquerda (caso RL) */
-noAVL *rotacaoDirEsqAVL(noAVL *raiz) {
-    raiz->dir = rotacaoDireitaAVL(raiz->dir);
-    return rotacaoEsquerdaAVL(raiz);
-}
+// Substitui chamadas originais
+node *balancear_node_mod(node *const node_ptr) {
+    if (node_ptr->esq) node_ptr->esq = balancear_node_mod(node_ptr->esq);
+    if (node_ptr->dir) node_ptr->dir = balancear_node_mod(node_ptr->dir);
 
-/* Cria novo nó AVL com chave ch, filhos NULL, altura 0 */
-noAVL *novoNoAVL(tipochave ch) {
-    noAVL *no = (noAVL *)malloc(sizeof(noAVL));
-    no->chave = ch;
-    no->esq = no->dir = NULL;
-    no->h = 0;
-    return no;
-}
+    int fator = fator_bal(node_ptr);
 
-/* Insere chave ch na árvore AVL apontada por raiz, balanceia conforme necessário */
-noAVL *insereAVL(noAVL *raiz, tipochave ch) {
-    if (!raiz) {
-        /* Caso base: encontrou posição, cria nó novo */
-        return novoNoAVL(ch);
+    if (fator >= 2) {
+        if (fator_bal(node_ptr->esq) <= -1)
+            return rotationar_esq_dir_conta(node_ptr);
+        else
+            return rotacionar_esq_esq_conta(node_ptr);
+    } else if (fator <= -2) {
+        if (fator_bal(node_ptr->dir) >= 1)
+            return rotacionar_dir_esq_conta(node_ptr);
+        else
+            return rotacionar_dir_dir_conta(node_ptr);
     }
-    if (ch < raiz->chave) {
-        /* Insere à esquerda */
-        raiz->esq = insereAVL(raiz->esq, ch);
-        /* Verifica fator de balanceamento */
-        if (alturaAVL(raiz->esq) - alturaAVL(raiz->dir) == 2) {
-            if (ch < raiz->esq->chave) {
-                /* Caso LL */
-                raiz = rotacaoDireitaAVL(raiz);
-            } else {
-                /* Caso LR */
-                raiz = rotacaoEsqDirAVL(raiz);
-            }
-        }
+    return node_ptr;
+}
+
+void balancear_tree_mod(tree *const tree_ptr) {
+    node *nova_raiz = balancear_node_mod(tree_ptr->raiz);
+    if (nova_raiz != tree_ptr->raiz)
+        tree_ptr->raiz = nova_raiz;
+}
+
+void inserir_mod(tree *tree_ptr, int valor) {
+    node *novo_node_ptr = NULL, *next_ptr = tree_ptr->raiz, *last_ptr = NULL;
+
+    while (next_ptr != NULL) {
+        last_ptr = next_ptr;
+        if (valor < next_ptr->valor) next_ptr = next_ptr->esq;
+        else if (valor > next_ptr->valor) next_ptr = next_ptr->dir;
+        else return; // valor repetido
     }
-    else if (ch > raiz->chave) {
-        /* Insere à direita */
-        raiz->dir = insereAVL(raiz->dir, ch);
-        /* Verifica fator de balanceamento */
-        if (alturaAVL(raiz->dir) - alturaAVL(raiz->esq) == 2) {
-            if (ch > raiz->dir->chave) {
-                /* Caso RR */
-                raiz = rotacaoEsquerdaAVL(raiz);
+
+    novo_node_ptr = init_node(valor);
+    if (!last_ptr) tree_ptr->raiz = novo_node_ptr;
+    else if (valor < last_ptr->valor) last_ptr->esq = novo_node_ptr;
+    else last_ptr->dir = novo_node_ptr;
+
+    balancear_tree_mod(tree_ptr);
+}
+
+// Altura da subárvore esquerda e direita da raiz
+int altura_subarvore(node *raiz) {
+    if (!raiz) return 0;
+    return altura(raiz);
+}
+
+// Altura negra de uma AVP
+int altura_negra(Node *no, Node *t_nill) {
+    if (no == t_nill) return 0;
+    int esq = altura_negra(no->left, t_nill);
+    int dir = altura_negra(no->right, t_nill);
+    int max_alt = esq > dir ? esq : dir;
+    return max_alt + (no->color == 1 ? 1 : 0);
+}
+
+// Wrappers de rotação AVP com contador
+int left_rotate_conta(Node *no, Tree *t) {
+    rotacoes_avp++;
+    return left_rotate(no, t);
+}
+
+int right_rotate_conta(Node *no, Tree *t) {
+    rotacoes_avp++;
+    return right_rotate(no, t);
+}
+
+// Altera função de ajuste para contar mudanças de cor e rotações na AVP
+int RB_insert_fixup_conta(Node *no, Tree *t) {
+    Node *tio;
+    while (no->parent->color == 0) {
+        if (no->parent == no->parent->parent->left) {
+            tio = no->parent->parent->right;
+            if (tio->color == 0) {
+                no->parent->color = 1;
+                tio->color = 1;
+                no->parent->parent->color = 0;
+                mudancas_cor_avp += 3;
+                no = no->parent->parent;
             } else {
-                /* Caso RL */
-                raiz = rotacaoDirEsqAVL(raiz);
-            }
-        }
-    }
-    /* Atualiza altura desse nó */
-    raiz->h = max(alturaAVL(raiz->esq), alturaAVL(raiz->dir)) + 1;
-    return raiz;
-}
-
-/* ================= Funções RBT (Vermelho-Preto) ================= */
-
-int rotacoesRBT = 0, trocasCor = 0;  /* Contadores para RBT */
-
-/* Cria novo nó RBT com chave, filhos e pai NULL, cor RED */
-noRBT *novoNoRBT(tipochave chave) {
-    noRBT *no = (noRBT *)malloc(sizeof(noRBT));
-    no->chave = chave;
-    no->esq = no->dir = no->pai = NULL;
-    no->cor = RED;
-    return no;
-}
-
-/* Rotação simples à esquerda em x, retorna nova raiz da subárvore */
-noRBT *rotacaoEsquerdaRBT(noRBT *raiz, noRBT *x) {
-    noRBT *y = x->dir;
-    x->dir = y->esq;
-    if (y->esq) y->esq->pai = x;  /* Ajusta pai se existe filho */
-    y->pai = x->pai;
-    if (!x->pai) raiz = y;  /* x era raiz geral */
-    else if (x == x->pai->esq) x->pai->esq = y;
-    else x->pai->dir = y;
-    y->esq = x;
-    x->pai = y;
-    rotacoesRBT++;
-    return raiz;
-}
-
-/* Rotação simples à direita em x */
-noRBT *rotacaoDireitaRBT(noRBT *raiz, noRBT *x) {
-    noRBT *y = x->esq;
-    x->esq = y->dir;
-    if (y->dir) y->dir->pai = x;  /* Ajusta pai se existe filho */
-    y->pai = x->pai;
-    if (!x->pai) raiz = y;  /* x era raiz geral */
-    else if (x == x->pai->dir) x->pai->dir = y;
-    else x->pai->esq = y;
-    y->dir = x;
-    x->pai = y;
-    rotacoesRBT++;
-    return raiz;
-}
-
-/* Corrige propriedades de RBT após inserção de z */
-noRBT *corrigeRBT(noRBT *raiz, noRBT *z) {
-    while (z->pai && z->pai->cor == RED) {
-        if (z->pai == z->pai->pai->esq) {
-            noRBT *y = z->pai->pai->dir;  /* Tio de z */
-            if (y && y->cor == RED) {
-                /* Caso 1: pai e tio vermelhos -> recolore */
-                z->pai->cor = BLACK;
-                y->cor = BLACK;
-                z->pai->pai->cor = RED;
-                z = z->pai->pai;
-                trocasCor += 3;
-            } else {
-                if (z == z->pai->dir) {
-                    /* Caso 2: triangle move */
-                    z = z->pai;
-                    raiz = rotacaoEsquerdaRBT(raiz, z);
+                if (no == no->parent->right) {
+                    no = no->parent;
+                    left_rotate_conta(no, t);
                 }
-                /* Caso 3: line move */
-                z->pai->cor = BLACK;
-                z->pai->pai->cor = RED;
-                raiz = rotacaoDireitaRBT(raiz, z->pai->pai);
-                trocasCor += 2;
+                no->parent->color = 1;
+                no->parent->parent->color = 0;
+                mudancas_cor_avp += 2;
+                right_rotate_conta(no->parent->parent, t);
             }
         } else {
-            /* Espelho do caso acima: pai é filho direito */
-            noRBT *y = z->pai->pai->esq;
-            if (y && y->cor == RED) {
-                /* Caso 1 espelhado */
-                z->pai->cor = BLACK;
-                y->cor = BLACK;
-                z->pai->pai->cor = RED;
-                z = z->pai->pai;
-                trocasCor += 3;
+            tio = no->parent->parent->left;
+            if (tio->color == 0) {
+                no->parent->color = 1;
+                tio->color = 1;
+                no->parent->parent->color = 0;
+                mudancas_cor_avp += 3;
+                no = no->parent->parent;
             } else {
-                if (z == z->pai->esq) {
-                    /* Caso 2 espelhado */
-                    z = z->pai;
-                    raiz = rotacaoDireitaRBT(raiz, z);
+                if (no == no->parent->left) {
+                    no = no->parent;
+                    right_rotate_conta(no, t);
                 }
-                /* Caso 3 espelhado */
-                z->pai->cor = BLACK;
-                z->pai->pai->cor = RED;
-                raiz = rotacaoEsquerdaRBT(raiz, z->pai->pai);
-                trocasCor += 2;
+                no->parent->color = 1;
+                no->parent->parent->color = 0;
+                mudancas_cor_avp += 2;
+                left_rotate_conta(no->parent->parent, t);
             }
         }
     }
-    raiz->cor = BLACK;  /* Garante raiz preta */
-    return raiz;
-}
-
-/* Insere chave em RBT e corrige propriedades */
-noRBT *insereRBT(noRBT *raiz, tipochave chave) {
-    noRBT *z = novoNoRBT(chave);
-    noRBT *y = NULL;
-    noRBT *x = raiz;
-    while (x) {
-        y = x;
-        if (chave < x->chave) x = x->esq;
-        else x = x->dir;
+    if (t->root->color == 0) {
+        t->root->color = 1;
+        mudancas_cor_avp++;
     }
-    z->pai = y;
-    if (!y) raiz = z;
-    else if (chave < y->chave) y->esq = z;
-    else y->dir = z;
-    return corrigeRBT(raiz, z);
+    return 1;
 }
 
-/* Retorna altura (número de arestas) de RBT */
-int alturaRBT(noRBT *raiz) {
-    if (!raiz) return -1;
-    int ae = alturaRBT(raiz->esq);
-    int ad = alturaRBT(raiz->dir);
-    return 1 + max(ae, ad);
+int insert_node_conta(Tree *t, int info, Node *t_nill) {
+    Node *aux = t->root, *ant = t->root;
+    while (aux != t_nill) {
+        ant = aux;
+        aux = (info < aux->key) ? aux->left : aux->right;
+    }
+
+    Node *new_node = (Node *)calloc(1, sizeof(Node));
+    new_node->key = info;
+    new_node->color = 0;
+    new_node->left = t_nill;
+    new_node->right = t_nill;
+
+    if (ant == t_nill) {
+        t->root = new_node;
+        new_node->parent = t_nill;
+    } else {
+        new_node->parent = ant;
+        if (info < ant->key) ant->left = new_node;
+        else ant->right = new_node;
+    }
+
+    return RB_insert_fixup_conta(new_node, t);
 }
 
-/* Retorna altura negra (conta apenas nós pretos no caminho mais longo) */
-int alturaNegra(noRBT *raiz) {
-    if (!raiz) return 0;
-    int ae = alturaNegra(raiz->esq);
-    int ad = alturaNegra(raiz->dir);
-    return max(ae, ad) + (raiz->cor == BLACK ? 1 : 0);
-}
-
-/* ================ Programa Principal ================ */
 int main() {
-    tipochave ch;
-    noAVL *raizAVL = NULL;
-    noRBT *raizRBT = NULL;
+    tree *avl = init_tree();
+    Node *t_nill = make_t_nill();
+    Tree *avp = make_tree(t_nill);
 
-    /* Leitura da entrada: inteiro negativo encerra */
-    while (scanf("%d", &ch) == 1) {
-        if (ch < 0) break;
-        raizAVL = insereAVL(raizAVL, ch);
-        raizRBT = insereRBT(raizRBT, ch);
+    int x;
+    while (scanf("%d", &x) && x >= 0) {
+        inserir_mod(avl, x);
+        insert_node_conta(avp, x, t_nill);
     }
 
-    /* Cálculo e impressão das alturas da AVL */
-    int hAVL = alturaAVL(raizAVL) + 1;
-    int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) + 1 : 0;
-    int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
-    printf("%d, %d, %d\n", hAVL, heAVL, hdAVL);
+    int h_avl = altura(avl->raiz);
+    int h_avl_e = altura_subarvore(avl->raiz->esq);
+    int h_avl_d = altura_subarvore(avl->raiz->dir);
 
-    /* Cálculo e impressão das alturas da RBT */
-    int hRBT = alturaRBT(raizRBT) + 1;
-    int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
-    int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
-    printf("%d, %d, %d\n", hRBT, heRBT, hdRBT);
+    int h_avp = altura_no(avp->root, t_nill);
+    int h_avp_e = altura_no(avp->root->left, t_nill);
+    int h_avp_d = altura_no(avp->root->right, t_nill);
 
-    /* Altura negra da RBT */
-    printf("%d\n", alturaNegra(raizRBT));
+    int hnegra = altura_negra(avp->root, t_nill);
 
-    /* Contadores finais: trocas de cor RBT, rotações RBT, rotações AVL */
-    printf("%d, %d, %d\n", trocasCor, rotacoesRBT, rotacoesAVL);
+    printf("%d, %d, %d\n", h_avl, h_avl_e, h_avl_d);
+    printf("%d, %d, %d\n", h_avp, h_avp_e, h_avp_d);
+    printf("%d\n", hnegra);
+    printf("%d, %d, %d\n", mudancas_cor_avp, rotacoes_avp, rotacoes_avl);
 
+    liberar_memoria(avl);
     return 0;
 }
