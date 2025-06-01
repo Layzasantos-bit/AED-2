@@ -263,26 +263,35 @@ int main() {
 
     int x;
     while (scanf("%d", &x) == 1) {
-        if (x < 0) break;
+        if (x < 0) break;           // número negativo = fim (não insere)
         inserir_mod(avl, x);
         insert_node_conta(avp, x, t_nill);
     }
 
-    int ha = altura(avl->raiz);
+    // --- calcula primeiras métricas da AVL ---
+    int ha  = altura(avl->raiz);
     int hae = altura_subarvore(avl->raiz->esq);
     int had = altura_subarvore(avl->raiz->dir);
-    int hr = altura_no(avp->root, t_nill);
+
+    // --- calcula métricas da AVP (altura_no retorna nível, de −1 para t_nill) ---
+    int hr  = altura_no(avp->root, t_nill);
     int hre = altura_no(avp->root->left, t_nill);
     int hrd = altura_no(avp->root->right, t_nill);
+
+    // --- altura negra da AVP ---
     int hnegra = altura_negra(avp->root, t_nill);
 
-    // Linha 1 (agora AVP)
-    printf("%d, %d, %d\n", hr, hre, hrd);
-    // Linha 2 (agora AVL)
-    printf("%d, %d, %d\n", ha, hae, had);
-    // Linha 3 (altura negra da AVP)
+    // Agora imprimimos:
+    // 1ª linha → Alturas da AVP, somando +1 para ficar no mesmo estilo da AVL
+    printf("%d, %d, %d\n", hr + 1, hre + 1, hrd + 1);
+
+    // 2ª linha → Alturas da AVL (já estavam no formato “número de nós”)
+    printf("%d, %d, %d\n", ha,    hae,     had);
+
+    // 3ª linha → Altura negra da AVP
     printf("%d\n", hnegra);
-    // Linha 4 (contadores: mudança de cor AVP, rotações AVP, rotações AVL)
+
+    // 4ª linha → Contadores: mudanças de cor AVP, rotações AVP, rotações AVL
     printf("%d, %d, %d\n", mudancas_cor_avp, rotacoes_avp, rotacoes_avl);
 
     liberar_memoria(avl);
