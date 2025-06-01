@@ -1,300 +1,246 @@
-// AP06 - Comparação entre Árvores AVL e Vermelho-Preto (AVP)
 #include <stdio.h>
 #include <stdlib.h>
 
-// ------------------------------ AVL ------------------------------
-typedef struct node {
-    int valor;
-    struct node *esq, *dir;
-} node;
+#define RED 1
+#define BLACK 0
 
-typedef struct {
-    node *raiz;
-} tree;
+typedef int tipochave;
 
-tree *init_tree() {
-    tree *t = malloc(sizeof(tree));
-    t->raiz = NULL;
-    return t;
+typedef struct noAVL {
+    tipochave chave;
+    struct noAVL *esq, *dir;
+    int h;
+} noAVL;
+
+typedef struct noRBT {
+    tipochave chave;
+    struct noRBT *esq, *dir, *pai;
+    int cor;
+} noRBT;
+
+int max(int a, int b) { return (a > b) ? a : b; }
+
+int alturaAVL(noAVL *raiz) {
+    return raiz ? raiz->h : -1;
 }
 
-node *init_node(int valor) {
-    node *n = malloc(sizeof(node));
-    n->valor = valor;
-    n->esq = n->dir = NULL;
-    return n;
+int rotacoesAVL = 0;
+
+noAVL *rotacaoDireitaAVL(noAVL *k2) {
+    noAVL *k1 = k2->esq;
+    k2->esq = k1->dir;
+    k1->dir = k2;
+    k2->h = max(alturaAVL(k2->esq), alturaAVL(k2->dir)) + 1;
+    k1->h = max(alturaAVL(k1->esq), alturaAVL(k1->dir)) + 1;
+    rotacoesAVL++;
+    return k1;
 }
 
-void liberar_memoria_impl(node *n) {
-    if (!n) return;
-    liberar_memoria_impl(n->esq);
-    liberar_memoria_impl(n->dir);
-    free(n);
+noAVL *rotacaoEsquerdaAVL(noAVL *k1) {
+    noAVL *k2 = k1->dir;
+    k1->dir = k2->esq;
+    k2->esq = k1;
+    k1->h = max(alturaAVL(k1->esq), alturaAVL(k1->dir)) + 1;
+    k2->h = max(alturaAVL(k2->esq), alturaAVL(k2->dir)) + 1;
+    rotacoesAVL++;
+    return k2;
 }
 
-void liberar_memoria(tree *t) {
-    liberar_memoria_impl(t->raiz);
-    free(t);
+noAVL *rotacaoEsqDirAVL(noAVL *raiz) {
+    raiz->esq = rotacaoEsquerdaAVL(raiz->esq);
+    return rotacaoDireitaAVL(raiz);
 }
 
-int altura(const node *n) {
-    if (!n) return 0;
-    int ae = altura(n->esq);
-    int ad = altura(n->dir);
-    return (ae > ad ? ae : ad) + 1;
+noAVL *rotacaoDirEsqAVL(noAVL *raiz) {
+    raiz->dir = rotacaoDireitaAVL(raiz->dir);
+    return rotacaoEsquerdaAVL(raiz);
 }
 
-int fator_bal(const node *n) {
-    if (!n) return 0;
-    return altura(n->esq) - altura(n->dir);
+noAVL *novoNoAVL(tipochave ch) {
+    noAVL *no = malloc(sizeof(noAVL));
+    no->chave = ch;
+    no->esq = no->dir = NULL;
+    no->h = 0;
+    return no;
 }
 
-int rotacoes_avl = 0;
-
-node *rotacionar_esq_esq(node *n) {
-    rotacoes_avl++;
-    node *e = n->esq;
-    n->esq = e->dir;
-    e->dir = n;
-    return e;
-}
-
-node *rotacionar_esq_dir(node *n) {
-    rotacoes_avl++;
-    node *e = n->esq;
-    node *d = e->dir;
-    n->esq = d->dir;
-    e->dir = d->esq;
-    d->esq = e;
-    d->dir = n;
-    return d;
-}
-
-node *rotacionar_dir_esq(node *n) {
-    rotacoes_avl++;
-    node *d = n->dir;
-    node *e = d->esq;
-    n->dir = e->esq;
-    d->esq = e->dir;
-    e->dir = d;
-    e->esq = n;
-    return e;
-}
-
-node *rotacionar_dir_dir(node *n) {
-    rotacoes_avl++;
-    node *d = n->dir;
-    n->dir = d->esq;
-    d->esq = n;
-    return d;
-}
-
-node *inserir_avl_rec(node *raiz, int valor) {
-    if (!raiz) return init_node(valor);
-
-    if (valor < raiz->valor)
-        raiz->esq = inserir_avl_rec(raiz->esq, valor);
-    else if (valor > raiz->valor)
-        raiz->dir = inserir_avl_rec(raiz->dir, valor);
-    else
-        return raiz; // ignora duplicata
-
-    int f = fator_bal(raiz);
-    if (f >= 2) {
-        if (fator_bal(raiz->esq) <= -1)
-            return rotacionar_esq_dir(raiz);
-        else
-            return rotacionar_esq_esq(raiz);
-    } else if (f <= -2) {
-        if (fator_bal(raiz->dir) >= 1)
-            return rotacionar_dir_esq(raiz);
-        else
-            return rotacionar_dir_dir(raiz);
+noAVL *insereAVL(noAVL *raiz, tipochave ch) {
+    if (!raiz) return novoNoAVL(ch);
+    if (ch < raiz->chave) {
+        raiz->esq = insereAVL(raiz->esq, ch);
+        if (alturaAVL(raiz->esq) - alturaAVL(raiz->dir) == 2) {
+            if (ch < raiz->esq->chave)
+                raiz = rotacaoDireitaAVL(raiz);
+            else
+                raiz = rotacaoEsqDirAVL(raiz);
+        }
+    } else if (ch > raiz->chave) {
+        raiz->dir = insereAVL(raiz->dir, ch);
+        if (alturaAVL(raiz->dir) - alturaAVL(raiz->esq) == 2) {
+            if (ch > raiz->dir->chave)
+                raiz = rotacaoEsquerdaAVL(raiz);
+            else
+                raiz = rotacaoDirEsqAVL(raiz);
+        }
     }
-
+    raiz->h = max(alturaAVL(raiz->esq), alturaAVL(raiz->dir)) + 1;
     return raiz;
 }
 
-void inserir_mod(tree *t, int valor) {
-    t->raiz = inserir_avl_rec(t->raiz, valor);
+int rotacoesRBT = 0, trocasCor = 0;
+
+noRBT *novoNoRBT(tipochave chave) {
+    noRBT *no = malloc(sizeof(noRBT));
+    no->chave = chave;
+    no->esq = no->dir = no->pai = NULL;
+    no->cor = RED;
+    return no;
 }
 
-int altura_subarvore(node *r) {
-    return r ? altura(r) : 0;
+noRBT *rotacaoEsquerdaRBT(noRBT *raiz, noRBT *x) {
+    noRBT *y = x->dir;
+    x->dir = y->esq;
+    if (y->esq) y->esq->pai = x;
+    y->pai = x->pai;
+    if (!x->pai)
+        raiz = y;
+    else if (x == x->pai->esq)
+        x->pai->esq = y;
+    else
+        x->pai->dir = y;
+    y->esq = x;
+    x->pai = y;
+    rotacoesRBT++;
+    return raiz;
 }
 
-// ------------------------------ AVP ------------------------------
-typedef struct Node {
-    int key, color; // 0=vermelho, 1=preto
-    struct Node *left, *right, *parent;
-} Node;
-
-typedef struct {
-    Node *root;
-} Tree;
-
-int rotacoes_avp = 0, mudancas_cor_avp = 0;
-
-Node *make_t_nill() {
-    Node *n = calloc(1, sizeof(Node));
-    n->color = 1;
-    n->key = 1000;
-    n->left = n->right = n->parent = n;
-    return n;
+noRBT *rotacaoDireitaRBT(noRBT *raiz, noRBT *x) {
+    noRBT *y = x->esq;
+    x->esq = y->dir;
+    if (y->dir) y->dir->pai = x;
+    y->pai = x->pai;
+    if (!x->pai)
+        raiz = y;
+    else if (x == x->pai->dir)
+        x->pai->dir = y;
+    else
+        x->pai->esq = y;
+    y->dir = x;
+    x->pai = y;
+    rotacoesRBT++;
+    return raiz;
 }
 
-Tree *make_tree(Node *t_nill) {
-    Tree *t = calloc(1, sizeof(Tree));
-    t->root = t_nill;
-    return t;
-}
-
-int altura_no(Node *r, Node *t_nill) {
-    if (r == t_nill) return -1;
-    int ae = altura_no(r->left, t_nill);
-    int ad = altura_no(r->right, t_nill);
-    return (ae > ad ? ae : ad) + 1;
-}
-
-int altura_negra(Node *n, Node *t_nill) {
-    if (n == t_nill) return 0;
-    int e = altura_negra(n->left, t_nill);
-    int d = altura_negra(n->right, t_nill);
-    int max = e > d ? e : d;
-    return max + (n->color == 1 ? 1 : 0);
-}
-
-int left_rotate(Node *x, Tree *t) {
-    rotacoes_avp++;
-    Node *y = x->right;
-    x->right = y->left;
-    if (y->left->key != 1000) y->left->parent = x;
-    y->left = x;
-    y->parent = x->parent;
-    x->parent = y;
-    if (t->root == x) t->root = y;
-    else if (y->parent->left == x) y->parent->left = y;
-    else y->parent->right = y;
-    return 1;
-}
-
-int right_rotate(Node *x, Tree *t) {
-    rotacoes_avp++;
-    Node *y = x->left;
-    x->left = y->right;
-    if (y->right->key != 1000) y->right->parent = x;
-    y->right = x;
-    y->parent = x->parent;
-    x->parent = y;
-    if (t->root == x) t->root = y;
-    else if (y->parent->right == x) y->parent->right = y;
-    else y->parent->left = y;
-    return 1;
-}
-
-int RB_insert_fixup_conta(Node *z, Tree *t) {
-    Node *y;
-    while (z->parent->color == 0) {
-        if (z->parent == z->parent->parent->left) {
-            y = z->parent->parent->right;
-            if (y->color == 0) {
-                z->parent->color = y->color = 1;
-                z->parent->parent->color = 0;
-                mudancas_cor_avp += 3;
-                z = z->parent->parent;
+noRBT *corrigeRBT(noRBT *raiz, noRBT *z) {
+    while (z->pai && z->pai->cor == RED) {
+        if (z->pai == z->pai->pai->esq) {
+            noRBT *y = z->pai->pai->dir;
+            if (y && y->cor == RED) {
+                z->pai->cor = BLACK;
+                y->cor = BLACK;
+                z->pai->pai->cor = RED;
+                z = z->pai->pai;
+                trocasCor += 3;
             } else {
-                if (z == z->parent->right) {
-                    z = z->parent;
-                    left_rotate(z, t);
+                if (z == z->pai->dir) {
+                    z = z->pai;
+                    raiz = rotacaoEsquerdaRBT(raiz, z);
                 }
-                z->parent->color = 1;
-                z->parent->parent->color = 0;
-                mudancas_cor_avp += 2;
-                right_rotate(z->parent->parent, t);
+                z->pai->cor = BLACK;
+                z->pai->pai->cor = RED;
+                raiz = rotacaoDireitaRBT(raiz, z->pai->pai);
+                trocasCor += 2;
             }
         } else {
-            y = z->parent->parent->left;
-            if (y->color == 0) {
-                z->parent->color = y->color = 1;
-                z->parent->parent->color = 0;
-                mudancas_cor_avp += 3;
-                z = z->parent->parent;
+            noRBT *y = z->pai->pai->esq;
+            if (y && y->cor == RED) {
+                z->pai->cor = BLACK;
+                y->cor = BLACK;
+                z->pai->pai->cor = RED;
+                z = z->pai->pai;
+                trocasCor += 3;
             } else {
-                if (z == z->parent->left) {
-                    z = z->parent;
-                    right_rotate(z, t);
+                if (z == z->pai->esq) {
+                    z = z->pai;
+                    raiz = rotacaoDireitaRBT(raiz, z);
                 }
-                z->parent->color = 1;
-                z->parent->parent->color = 0;
-                mudancas_cor_avp += 2;
-                left_rotate(z->parent->parent, t);
+                z->pai->cor = BLACK;
+                z->pai->pai->cor = RED;
+                raiz = rotacaoEsquerdaRBT(raiz, z->pai->pai);
+                trocasCor += 2;
             }
         }
     }
-    if (t->root->color == 0) {
-        t->root->color = 1;
-        mudancas_cor_avp++;
-    }
-    return 1;
+    raiz->cor = BLACK;
+    return raiz;
 }
 
-int insert_node_conta(Tree *t, int key, Node *t_nill) {
-    Node *y = t_nill, *x = t->root;
-    while (x != t_nill) {
+noRBT *insereRBT(noRBT *raiz, tipochave chave) {
+    noRBT *z = novoNoRBT(chave);
+    noRBT *y = NULL;
+    noRBT *x = raiz;
+    while (x) {
         y = x;
-        x = (key < x->key) ? x->left : x->right;
+        if (chave < x->chave)
+            x = x->esq;
+        else
+            x = x->dir;
     }
-    Node *z = calloc(1, sizeof(Node));
-    z->key = key;
-    z->color = 0;
-    z->left = z->right = t_nill;
-    z->parent = y;
-    if (y == t_nill) t->root = z;
-    else if (key < y->key) y->left = z;
-    else y->right = z;
-    return RB_insert_fixup_conta(z, t);
+    z->pai = y;
+    if (!y)
+        raiz = z;
+    else if (chave < y->chave)
+        y->esq = z;
+    else
+        y->dir = z;
+    return corrigeRBT(raiz, z);
 }
 
-// ------------------------------ MAIN ------------------------------
-int main() {
-    tree *avl = init_tree();
-    Node *t_nill = make_t_nill();
-    Tree *avp = make_tree(t_nill);
+int alturaRBT(noRBT *raiz) {
+    if (!raiz) return -1;
+    int ae = alturaRBT(raiz->esq);
+    int ad = alturaRBT(raiz->dir);
+    return 1 + max(ae, ad);
+}
 
-    int x;
-    while (scanf("%d", &x) == 1) {
-        if (x < 0) break;  // número negativo = fim (não insere)
-        inserir_mod(avl, x);
-        insert_node_conta(avp, x, t_nill);
+int alturaNegra(noRBT *raiz) {
+    if (!raiz) return 0;
+    int alt = max(alturaNegra(raiz->esq), alturaNegra(raiz->dir));
+    return alt + (raiz->cor == BLACK ? 1 : 0);
+}
+
+int main() {
+    tipochave ch;
+    noAVL *raizAVL = NULL;
+    noRBT *raizRBT = NULL;
+
+    while (scanf("%d", &ch) == 1) {
+        if (ch < 0) break;
+        raizAVL = insereAVL(raizAVL, ch);
+        raizRBT = insereRBT(raizRBT, ch);
     }
 
-    // --- calcula métricas da AVL ---
-    int ha  = altura(avl->raiz);
-    int hae = altura_subarvore(avl->raiz->esq);
-    int had = altura_subarvore(avl->raiz->dir);
+    int hAVL = alturaAVL(raizAVL);
+    int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) + 1 : 0;
+    int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
 
-    // --- calcula métricas da AVP (altura_no retorna nível, de −1 para t_nill) ---
-    int hr  = altura_no(avp->root, t_nill);
-    int hre = altura_no(avp->root->left, t_nill);
-    int hrd = altura_no(avp->root->right, t_nill);
+    int hRBT = alturaRBT(raizRBT);
+    int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
+    int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
 
-    // --- altura negra da AVP ---
-    int hnegra = altura_negra(avp->root, t_nill);
+    int hNegra = alturaNegra(raizRBT);
 
-    // 1ª linha → Alturas da AVP, somando +1 para coincidir com a contagem de nós da AVL
-    printf("%d %d %d\n", hr + 1, hre + 1, hrd + 1);
+    // 1ª linha: alturas da RBT
+    printf("%d %d %d\n", hRBT, heRBT, hdRBT);
 
-    // 2ª linha → Alturas da AVL
-    printf("%d %d %d\n", ha, hae, had);
+    // 2ª linha: alturas da AVL
+    printf("%d %d %d\n", hAVL, heAVL, hdAVL);
 
-    // 3ª linha → Altura negra da AVP
-    printf("%d\n", hnegra);
+    // 3ª linha: altura negra da RBT
+    printf("%d\n", hNegra);
 
-    // 4ª linha → Contadores: mudanças de cor AVP, rotações AVP, rotações AVL
-    printf("%d %d %d\n", mudancas_cor_avp, rotacoes_avp, rotacoes_avl);
+    // 4ª linha: trocas de cor, rotações RBT, rotações AVL
+    printf("%d %d %d\n", trocasCor, rotacoesRBT, rotacoesAVL);
 
-    liberar_memoria(avl);
-    free(t_nill);
-    free(avp);
     return 0;
 }
