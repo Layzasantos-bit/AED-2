@@ -18,16 +18,9 @@ typedef struct noRBT {
     int cor;
 } noRBT;
 
+int max(int a, int b) { return a > b ? a : b; }
 
-
-int max(int a, int b) {
-    return a > b ? a : b;
-}
-
-int alturaAVL(noAVL *raiz) {
-    return raiz ? raiz->h : -1;
-}
-
+int alturaAVL(noAVL *raiz) { return raiz ? raiz->h : -1; }
 int rotacoesAVL = 0;
 
 noAVL *rotacaoDireitaAVL(noAVL *k2) {
@@ -70,30 +63,22 @@ noAVL *novoNoAVL(tipochave ch) {
 
 noAVL *insereAVL(noAVL *raiz, tipochave ch) {
     if (!raiz) return novoNoAVL(ch);
-
     if (ch < raiz->chave) {
         raiz->esq = insereAVL(raiz->esq, ch);
         if (alturaAVL(raiz->esq) - alturaAVL(raiz->dir) == 2) {
-            if (ch < raiz->esq->chave)
-                raiz = rotacaoDireitaAVL(raiz);
-            else
-                raiz = rotacaoEsqDirAVL(raiz);
+            if (ch < raiz->esq->chave) raiz = rotacaoDireitaAVL(raiz);
+            else raiz = rotacaoEsqDirAVL(raiz);
         }
     } else if (ch > raiz->chave) {
         raiz->dir = insereAVL(raiz->dir, ch);
         if (alturaAVL(raiz->dir) - alturaAVL(raiz->esq) == 2) {
-            if (ch > raiz->dir->chave)
-                raiz = rotacaoEsquerdaAVL(raiz);
-            else
-                raiz = rotacaoDirEsqAVL(raiz);
+            if (ch > raiz->dir->chave) raiz = rotacaoEsquerdaAVL(raiz);
+            else raiz = rotacaoDirEsqAVL(raiz);
         }
     }
-
     raiz->h = max(alturaAVL(raiz->esq), alturaAVL(raiz->dir)) + 1;
     return raiz;
 }
-
-
 
 int rotacoesRBT = 0, trocasCor = 0;
 
@@ -181,7 +166,6 @@ noRBT *insereRBT(noRBT *raiz, tipochave chave) {
     noRBT *z = novoNoRBT(chave);
     noRBT *y = NULL;
     noRBT *x = raiz;
-
     while (x) {
         y = x;
         if (chave < x->chave) x = x->esq;
@@ -191,7 +175,6 @@ noRBT *insereRBT(noRBT *raiz, tipochave chave) {
     if (!y) raiz = z;
     else if (chave < y->chave) y->esq = z;
     else y->dir = z;
-
     return corrigeRBT(raiz, z);
 }
 
@@ -208,38 +191,28 @@ int alturaNegra(noRBT *raiz) {
     return alt + (raiz->cor == BLACK ? 1 : 0);
 }
 
-int alturaSub(noRBT *raiz) {
-    return alturaRBT(raiz);
-}
-
-int alturaSubAVL(noAVL *raiz) {
-    return alturaAVL(raiz);
-}
-
-
-
 int main() {
     tipochave ch;
     noAVL *raizAVL = NULL;
     noRBT *raizRBT = NULL;
-
     while (scanf("%d", &ch)) {
         if (ch < 0) break;
         raizAVL = insereAVL(raizAVL, ch);
         raizRBT = insereRBT(raizRBT, ch);
     }
-
     int hAVL = alturaAVL(raizAVL);
-    int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) : 0;
-    int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) : 0;
-    printf("%d, %d, %d\n", hAVL, heAVL, hdAVL);
-
+    int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) + 1 : 0;
+    int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
+    printf("%d, %d, %d
+", hAVL, heAVL, hdAVL);
     int hRBT = alturaRBT(raizRBT);
-    int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) : 0;
-    int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) : 0;
-    printf("%d, %d, %d\n", hRBT, heRBT, hdRBT);
-
-    printf("%d\n", alturaNegra(raizRBT));
-    printf("%d, %d, %d\n", trocasCor, rotacoesRBT, rotacoesAVL);
+    int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
+    int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
+    printf("%d, %d, %d
+", hRBT, heRBT, hdRBT);
+    printf("%d
+", alturaNegra(raizRBT));
+    printf("%d, %d, %d
+", trocasCor, rotacoesRBT, rotacoesAVL);
     return 0;
 }
