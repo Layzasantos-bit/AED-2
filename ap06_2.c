@@ -144,20 +144,6 @@ node *inserir_avl_rec(node *raiz, int valor) {
 void inserir_mod(tree *t, int valor) {
     t->raiz = inserir_avl_rec(t->raiz, valor);
 }
-    node *atual = t->raiz, *pai = NULL;
-    while (atual) {
-        pai = atual;
-        if (valor < atual->valor)
-            atual = atual->esq;
-        else if (valor > atual->valor)
-            atual = atual->dir;
-        else
-            return;
-    }
-    if (valor < pai->valor) pai->esq = novo;
-    else pai->dir = novo;
-    balancear_tree_mod(t);
-}
 
 int altura_subarvore(node *r) {
     return r ? altura(r) : 0;
@@ -320,5 +306,7 @@ int main() {
     printf("%d, %d, %d\n", mudancas_cor_avp, rotacoes_avp, rotacoes_avl);
 
     liberar_memoria(avl);
+    // Você pode liberar t_nill e avp se desejar também
+
     return 0;
 }
