@@ -195,22 +195,28 @@ int main() {
     tipochave ch;
     noAVL *raizAVL = NULL;
     noRBT *raizRBT = NULL;
+
     while (scanf("%d", &ch)) {
         if (ch < 0) break;
         raizAVL = insereAVL(raizAVL, ch);
         raizRBT = insereRBT(raizRBT, ch);
     }
-    int hAVL = alturaAVL(raizAVL);
+
+    int hAVL = alturaAVL(raizAVL) + 1;
     int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) + 1 : 0;
     int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
     printf("%d, %d, %d
-", hAVL + 1, heAVL, hdAVL);
-    int hRBT = alturaRBT(raizRBT);
+", hAVL, heAVL, hdAVL);
+
+    int hRBT = alturaRBT(raizRBT) + 1;
     int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
     int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
     printf("%d, %d, %d
-", hRBT + 1, heRBT, hdRBT);
-    printf("%d\n", alturaNegra(raizRBT));
-    printf("%d, %d, %d\n", trocasCor, rotacoesRBT, rotacoesAVL);
+", hRBT, heRBT, hdRBT);
+
+    printf("%d
+", alturaNegra(raizRBT));
+    printf("%d, %d, %d
+", trocasCor, rotacoesRBT, rotacoesAVL);
     return 0;
 }
