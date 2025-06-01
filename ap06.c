@@ -18,13 +18,17 @@ typedef struct noRBT {
     int cor;
 } noRBT;
 
-int max(int a, int b) { return (a > b) ? a : b; }
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+// ——————— AVL ———————
+
+int rotacoesAVL = 0;
 
 int alturaAVL(noAVL *raiz) {
     return raiz ? raiz->h : -1;
 }
-
-int rotacoesAVL = 0;
 
 noAVL *rotacaoDireitaAVL(noAVL *k2) {
     noAVL *k1 = k2->esq;
@@ -87,7 +91,10 @@ noAVL *insereAVL(noAVL *raiz, tipochave ch) {
     return raiz;
 }
 
-int rotacoesRBT = 0, trocasCor = 0;
+// ——————— RBT ———————
+
+int rotacoesRBT = 0;
+int trocasCor = 0;
 
 noRBT *novoNoRBT(tipochave chave) {
     noRBT *no = malloc(sizeof(noRBT));
@@ -225,21 +232,21 @@ int main() {
     int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
 
     int hRBT = alturaRBT(raizRBT);
-    int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
-    int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
+    int heRBT = raizRBT && raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
+    int hdRBT = raizRBT && raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
 
     int hNegra = alturaNegra(raizRBT);
 
-    // 1ª linha: alturas da RBT
-    printf("%d %d %d\n", hRBT, heRBT, hdRBT);
-
-    // 2ª linha: alturas da AVL
+    // 1ª linha: alturas AVL (sem vírgulas)
     printf("%d %d %d\n", hAVL, heAVL, hdAVL);
+
+    // 2ª linha: alturas RBT (sem vírgulas)
+    printf("%d %d %d\n", hRBT, heRBT, hdRBT);
 
     // 3ª linha: altura negra da RBT
     printf("%d\n", hNegra);
 
-    // 4ª linha: trocas de cor, rotações RBT, rotações AVL
+    // 4ª linha: trocas de cor, rotações RBT, rotações AVL (sem vírgulas)
     printf("%d %d %d\n", trocasCor, rotacoesRBT, rotacoesAVL);
 
     return 0;
