@@ -2,409 +2,256 @@
 
 #include <iostream>
 #include <algorithm>
-#include <vector>
 using namespace std;
 
 
-enum Color { RED, BLACK };
+enum Color { BLACK = 0, RED = 1 };
 
 
 struct AVLNode {
-    int data;
-    AVLNode* left;
-    AVLNode* right;
-    int height;
+    int chave;
+    AVLNode* esq;
+    AVLNode* dir;
+    int h;
     
-    AVLNode(int value) : data(value), left(nullptr), right(nullptr), height(1) {}
+    AVLNode(int value) : chave(value), esq(nullptr), dir(nullptr), h(0) {}
 };
 
 
 struct RBNode {
-    int data;
-    RBNode* left;
-    RBNode* right;
-    RBNode* parent;
-    Color color;
+    int chave;
+    RBNode* esq;
+    RBNode* dir;
+    RBNode* pai;
+    int cor;
     
-    RBNode(int value) : data(value), left(nullptr), right(nullptr), parent(nullptr), color(RED) {}
+    RBNode(int value) : chave(value), esq(nullptr), dir(nullptr), pai(nullptr), cor(RED) {}
 };
 
 
-class AVLTree {
-private:
-    AVLNode* root;
-    int rotations;
-    
-    int getHeight(AVLNode* node) {
-        return node ? node->height : 0;
-    }
-    
-    int getBalance(AVLNode* node) {
-        return node ? getHeight(node->left) - getHeight(node->right) : 0;
-    }
-    
-    void updateHeight(AVLNode* node) {
-        if (node) {
-            node->height = 1 + max(getHeight(node->left), getHeight(node->right));
-        }
-    }
-    
-    AVLNode* rotateRight(AVLNode* y) {
-        rotations++;
-        AVLNode* x = y->left;
-        AVLNode* T2 = x->right;
-        
-        x->right = y;
-        y->left = T2;
-        
-        updateHeight(y);
-        updateHeight(x);
-        
-        return x;
-    }
-    
-    AVLNode* rotateLeft(AVLNode* x) {
-        rotations++;
-        AVLNode* y = x->right;
-        AVLNode* T2 = y->left;
-        
-        y->left = x;
-        x->right = T2;
-        
-        updateHeight(x);
-        updateHeight(y);
-        
-        return y;
-    }
-    
-    AVLNode* insert(AVLNode* node, int key) {
-        if (!node) return new AVLNode(key);
-        
-        if (key < node->data) {
-            node->left = insert(node->left, key);
-        } else if (key > node->data) {
-            node->right = insert(node->right, key);
-        } else {
-            return node; 
-        }
-        
-        updateHeight(node);
-        
-        int balance = getBalance(node);
-        
-       
-        if (balance > 1 && key < node->left->data) {
-            return rotateRight(node);
-        }
-        
-       
-        if (balance < -1 && key > node->right->data) {
-            return rotateLeft(node);
-        }
-        
-       
-        if (balance > 1 && key > node->left->data) {
-            node->left = rotateLeft(node->left);
-            return rotateRight(node);
-        }
-        
-       
-        if (balance < -1 && key < node->right->data) {
-            node->right = rotateRight(node->right);
-            return rotateLeft(node);
-        }
-        
-        return node;
-    }
-    
-    AVLNode* search(AVLNode* node, int key) {
-        if (!node || node->data == key) return node;
-        if (key < node->data) return search(node->left, key);
-        return search(node->right, key);
-    }
-    
-    int calculateHeight(AVLNode* node) {
-        if (!node) return -1;
-        return max(calculateHeight(node->left), calculateHeight(node->right)) + 1;
-    }
-    
-    void destroyTree(AVLNode* node) {
-        if (node) {
-            destroyTree(node->left);
-            destroyTree(node->right);
-            delete node;
-        }
-    }
-    
-public:
-    AVLTree() : root(nullptr), rotations(0) {}
-    
-    ~AVLTree() {
-        destroyTree(root);
-    }
-    
-    void insert(int key) {
-        root = insert(root, key);
-    }
-    
-    bool search(int key) {
-        return search(root, key) != nullptr;
-    }
-    
-    int getRotations() {
-        return rotations;
-    }
-    
-    int getRootHeight() {
-        return calculateHeight(root);
-    }
-    
-    int getLeftSubtreeHeight() {
-        return root ? calculateHeight(root->left) : -1;
-    }
-    
-    int getRightSubtreeHeight() {
-        return root ? calculateHeight(root->right) : -1;
-    }
-};
+int rotacoesAVL = 0;
+int rotacoesRBT = 0;
+int trocasCor = 0;
 
 
-class RBTree {
-private:
-    RBNode* root;
-    int colorChanges;
-    int rotations;
+int maximo(int a, int b) { 
+    return a > b ? a : b; 
+}
+
+
+int alturaAVL(AVLNode* raiz) { 
+    return raiz ? raiz->h : -1; 
+}
+
+AVLNode* rotacaoDireitaAVL(AVLNode* k2) {
+    AVLNode* k1 = k2->esq;
+    k2->esq = k1->dir;
+    k1->dir = k2;
+    k2->h = maximo(alturaAVL(k2->esq), alturaAVL(k2->dir)) + 1;
+    k1->h = maximo(alturaAVL(k1->esq), alturaAVL(k1->dir)) + 1;
+    rotacoesAVL++;
+    return k1;
+}
+
+AVLNode* rotacaoEsquerdaAVL(AVLNode* k1) {
+    AVLNode* k2 = k1->dir;
+    k1->dir = k2->esq;
+    k2->esq = k1;
+    k1->h = maximo(alturaAVL(k1->esq), alturaAVL(k1->dir)) + 1;
+    k2->h = maximo(alturaAVL(k2->esq), alturaAVL(k2->dir)) + 1;
+    rotacoesAVL++;
+    return k2;
+}
+
+AVLNode* rotacaoEsqDirAVL(AVLNode* raiz) {
+    raiz->esq = rotacaoEsquerdaAVL(raiz->esq);
+    return rotacaoDireitaAVL(raiz);
+}
+
+AVLNode* rotacaoDirEsqAVL(AVLNode* raiz) {
+    raiz->dir = rotacaoDireitaAVL(raiz->dir);
+    return rotacaoEsquerdaAVL(raiz);
+}
+
+AVLNode* novoNoAVL(int ch) {
+    AVLNode* no = new AVLNode(ch);
+    return no;
+}
+
+AVLNode* insereAVL(AVLNode* raiz, int ch) {
+    if (!raiz) return novoNoAVL(ch);
     
-    void rotateLeft(RBNode* x) {
-        rotations++;
-        RBNode* y = x->right;
-        x->right = y->left;
-        
-        if (y->left) y->left->parent = x;
-        y->parent = x->parent;
-        
-        if (!x->parent) {
-            root = y;
-        } else if (x == x->parent->left) {
-            x->parent->left = y;
-        } else {
-            x->parent->right = y;
-        }
-        
-        y->left = x;
-        x->parent = y;
-    }
-    
-    void rotateRight(RBNode* y) {
-        rotations++;
-        RBNode* x = y->left;
-        y->left = x->right;
-        
-        if (x->right) x->right->parent = y;
-        x->parent = y->parent;
-        
-        if (!y->parent) {
-            root = x;
-        } else if (y == y->parent->right) {
-            y->parent->right = x;
-        } else {
-            y->parent->left = x;
-        }
-        
-        x->right = y;
-        y->parent = x;
-    }
-    
-    void fixInsert(RBNode* node) {
-        while (node != root && node->parent->color == RED) {
-            if (node->parent == node->parent->parent->left) {
-                RBNode* uncle = node->parent->parent->right;
-                
-                if (uncle && uncle->color == RED) {
-                    // Caso 1: Tio é vermelho
-                    node->parent->color = BLACK;
-                    uncle->color = BLACK;
-                    node->parent->parent->color = RED;
-                    colorChanges += 3;
-                    node = node->parent->parent;
-                } else {
-                    if (node == node->parent->right) {
-                        // Caso 2: Tio é preto e node é filho direito
-                        node = node->parent;
-                        rotateLeft(node);
-                    }
-                    // Caso 3: Tio é preto e node é filho esquerdo
-                    node->parent->color = BLACK;
-                    node->parent->parent->color = RED;
-                    colorChanges += 2;
-                    rotateRight(node->parent->parent);
-                }
+    if (ch < raiz->chave) {
+        raiz->esq = insereAVL(raiz->esq, ch);
+        if (alturaAVL(raiz->esq) - alturaAVL(raiz->dir) == 2) {
+            if (ch < raiz->esq->chave) {
+                raiz = rotacaoDireitaAVL(raiz);
             } else {
-                RBNode* uncle = node->parent->parent->left;
-                
-                if (uncle && uncle->color == RED) {
-                    node->parent->color = BLACK;
-                    uncle->color = BLACK;
-                    node->parent->parent->color = RED;
-                    colorChanges += 3;
-                    node = node->parent->parent;
-                } else {
-                    if (node == node->parent->left) {
-                        node = node->parent;
-                        rotateRight(node);
-                    }
-                    node->parent->color = BLACK;
-                    node->parent->parent->color = RED;
-                    colorChanges += 2;
-                    rotateLeft(node->parent->parent);
-                }
+                raiz = rotacaoEsqDirAVL(raiz);
             }
         }
-        
-        if (root->color == RED) {
-            root->color = BLACK;
-            colorChanges++;
-        }
-    }
-    
-    RBNode* search(RBNode* node, int key) {
-        if (!node || node->data == key) return node;
-        if (key < node->data) return search(node->left, key);
-        return search(node->right, key);
-    }
-    
-    int calculateHeight(RBNode* node) {
-        if (!node) return -1;
-        return max(calculateHeight(node->left), calculateHeight(node->right)) + 1;
-    }
-    
-    int calculateBlackHeight(RBNode* node) {
-        if (!node) return 0;
-        
-        int leftBlackHeight = calculateBlackHeight(node->left);
-        int rightBlackHeight = calculateBlackHeight(node->right);
-        
-        int blackHeight = max(leftBlackHeight, rightBlackHeight);
-        
-        if (node->color == BLACK) {
-            blackHeight++;
-        }
-        
-        return blackHeight;
-    }
-    
-    void destroyTree(RBNode* node) {
-        if (node) {
-            destroyTree(node->left);
-            destroyTree(node->right);
-            delete node;
-        }
-    }
-    
-public:
-    RBTree() : root(nullptr), colorChanges(0), rotations(0) {}
-    
-    ~RBTree() {
-        destroyTree(root);
-    }
-    
-    void insert(int key) {
-        RBNode* newNode = new RBNode(key);
-        RBNode* parent = nullptr;
-        RBNode* current = root;
-        
-        while (current) {
-            parent = current;
-            if (key < current->data) {
-                current = current->left;
-            } else if (key > current->data) {
-                current = current->right;
+    } else if (ch > raiz->chave) {
+        raiz->dir = insereAVL(raiz->dir, ch);
+        if (alturaAVL(raiz->dir) - alturaAVL(raiz->esq) == 2) {
+            if (ch > raiz->dir->chave) {
+                raiz = rotacaoEsquerdaAVL(raiz);
             } else {
-                delete newNode;
-                return; 
+                raiz = rotacaoDirEsqAVL(raiz);
             }
         }
-        
-        newNode->parent = parent;
-        
-        if (!parent) {
-            root = newNode;
-        } else if (key < parent->data) {
-            parent->left = newNode;
+    }
+    
+    
+    raiz->h = maximo(alturaAVL(raiz->esq), alturaAVL(raiz->dir)) + 1;
+    return raiz;
+}
+
+RBNode* novoNoRBT(int chave) {
+    RBNode* no = new RBNode(chave);
+    return no;
+}
+
+RBNode* rotacaoEsquerdaRBT(RBNode* raiz, RBNode* x) {
+    RBNode* y = x->dir;
+    x->dir = y->esq;
+    if (y->esq) y->esq->pai = x;
+    y->pai = x->pai;
+    if (!x->pai) raiz = y;
+    else if (x == x->pai->esq) x->pai->esq = y;
+    else x->pai->dir = y;
+    y->esq = x;
+    x->pai = y;
+    rotacoesRBT++;
+    return raiz;
+}
+
+RBNode* rotacaoDireitaRBT(RBNode* raiz, RBNode* x) {
+    RBNode* y = x->esq;
+    x->esq = y->dir;
+    if (y->dir) y->dir->pai = x;
+    y->pai = x->pai;
+    if (!x->pai) raiz = y;
+    else if (x == x->pai->dir) x->pai->dir = y;
+    else x->pai->esq = y;
+    y->dir = x;
+    x->pai = y;
+    rotacoesRBT++;
+    return raiz;
+}
+
+RBNode* corrigeRBT(RBNode* raiz, RBNode* z) {
+    while (z->pai && z->pai->cor == RED) {
+        if (z->pai == z->pai->pai->esq) {
+            RBNode* y = z->pai->pai->dir;
+            if (y && y->cor == RED) {
+                z->pai->cor = BLACK;
+                y->cor = BLACK;
+                z->pai->pai->cor = RED;
+                z = z->pai->pai;
+                trocasCor += 3;
+            } else {
+                if (z == z->pai->dir) {
+                    z = z->pai;
+                    raiz = rotacaoEsquerdaRBT(raiz, z);
+                }
+                z->pai->cor = BLACK;
+                z->pai->pai->cor = RED;
+                raiz = rotacaoDireitaRBT(raiz, z->pai->pai);
+                trocasCor += 2;
+            }
         } else {
-            parent->right = newNode;
+            RBNode* y = z->pai->pai->esq;
+            if (y && y->cor == RED) {
+                z->pai->cor = BLACK;
+                y->cor = BLACK;
+                z->pai->pai->cor = RED;
+                z = z->pai->pai;
+                trocasCor += 3;
+            } else {
+                if (z == z->pai->esq) {
+                    z = z->pai;
+                    raiz = rotacaoDireitaRBT(raiz, z);
+                }
+                z->pai->cor = BLACK;
+                z->pai->pai->cor = RED;
+                raiz = rotacaoEsquerdaRBT(raiz, z->pai->pai);
+                trocasCor += 2;
+            }
         }
-        
-        if (!newNode->parent) {
-            newNode->color = BLACK;
-            return;
+    }
+    raiz->cor = BLACK;
+    return raiz;
+}
+
+RBNode* insereRBT(RBNode* raiz, int chave) {
+    RBNode* z = novoNoRBT(chave);
+    RBNode* y = nullptr;
+    RBNode* x = raiz;
+    
+    while (x) {
+        y = x;
+        if (chave < x->chave) {
+            x = x->esq;
+        } else if (chave > x->chave) {
+            x = x->dir;
+        } else {
+            // Chave já existe - não insere duplicata
+            delete z;
+            return raiz;
         }
-        
-        if (!newNode->parent->parent) {
-            return;
-        }
-        
-        fixInsert(newNode);
     }
     
-    bool search(int key) {
-        return search(root, key) != nullptr;
+    z->pai = y;
+    if (!y) {
+        raiz = z;
+    } else if (chave < y->chave) {
+        y->esq = z;
+    } else {
+        y->dir = z;
     }
     
-    int getColorChanges() {
-        return colorChanges;
-    }
-    
-    int getRotations() {
-        return rotations;
-    }
-    
-    int getRootHeight() {
-        return calculateHeight(root);
-    }
-    
-    int getLeftSubtreeHeight() {
-        return root ? calculateHeight(root->left) : -1;
-    }
-    
-    int getRightSubtreeHeight() {
-        return root ? calculateHeight(root->right) : -1;
-    }
-    
-    int getBlackHeight() {
-        return calculateBlackHeight(root);
-    }
-};
+    return corrigeRBT(raiz, z);
+}
+
+int alturaRBT(RBNode* raiz) {
+    if (!raiz) return -1;
+    int ae = alturaRBT(raiz->esq);
+    int ad = alturaRBT(raiz->dir);
+    return 1 + maximo(ae, ad);
+}
+
+int alturaNegra(RBNode* raiz) {
+    if (!raiz) return 0;
+    int alt = maximo(alturaNegra(raiz->esq), alturaNegra(raiz->dir));
+    return alt + (raiz->cor == BLACK ? 1 : 0);
+}
 
 int main() {
-    AVLTree avlTree;
-    RBTree rbTree;
+    int ch;
+    AVLNode* raizAVL = nullptr;
+    RBNode* raizRBT = nullptr;
     
-    int value;
-    
-    
-    while (cin >> value) {
-        if (value < 0) {
-            break; 
-        }
-        avlTree.insert(value);
-        rbTree.insert(value);
+    while (cin >> ch) {
+        if (ch < 0) break;
+        raizAVL = insereAVL(raizAVL, ch);
+        raizRBT = insereRBT(raizRBT, ch);
     }
     
+    int hAVL = alturaAVL(raizAVL);
+    int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) + 1 : 0;
+    int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
+    cout << hAVL + 1 << ", " << heAVL << ", " << hdAVL << endl;
+    
+    int hRBT = alturaRBT(raizRBT);
+    int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
+    int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
+    cout << hRBT + 1 << ", " << heRBT << ", " << hdRBT << endl;
+    
+ 
+    cout << alturaNegra(raizRBT) << endl;
+    
 
-    cout << avlTree.getRootHeight() << ", " 
-         << avlTree.getLeftSubtreeHeight() << ", " 
-         << avlTree.getRightSubtreeHeight() << endl;
-    
-    cout << rbTree.getRootHeight() << ", " 
-         << rbTree.getLeftSubtreeHeight() << ", " 
-         << rbTree.getRightSubtreeHeight() << endl;
-    
-    cout << rbTree.getBlackHeight() << endl;
-    
-    cout << rbTree.getColorChanges() << ", " 
-         << rbTree.getRotations() << ", " 
-         << avlTree.getRotations() << endl;
+    cout << trocasCor << ", " << rotacoesRBT << ", " << rotacoesAVL << endl;
     
     return 0;
 }
