@@ -223,7 +223,8 @@ int main() {
     noAVL *raizAVL = NULL;
     noRBT *raizRBT = NULL;
 
-    while (scanf("%d", &ch) && ch >= 0) {
+    while (scanf("%d", &ch)) {
+        if (ch < 0) break;
         raizAVL = insereAVL(raizAVL, ch);
         raizRBT = insereRBT(raizRBT, ch);
     }
