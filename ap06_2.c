@@ -114,12 +114,36 @@ void balancear_tree_mod(tree *t) {
     t->raiz = balancear_node_mod(t->raiz);
 }
 
-void inserir_mod(tree *t, int valor) {
-    node *novo = init_node(valor);
-    if (!t->raiz) {
-        t->raiz = novo;
-        return;
+node *inserir_avl_rec(node *raiz, int valor) {
+    if (!raiz) return init_node(valor);
+
+    if (valor < raiz->valor)
+        raiz->esq = inserir_avl_rec(raiz->esq, valor);
+    else if (valor > raiz->valor)
+        raiz->dir = inserir_avl_rec(raiz->dir, valor);
+    else
+        return raiz; // ignora duplicata
+
+    int f = fator_bal(raiz);
+
+    if (f >= 2) {
+        if (fator_bal(raiz->esq) <= -1)
+            return rotationar_esq_dir(raiz);
+        else
+            return rotacionar_esq_esq(raiz);
+    } else if (f <= -2) {
+        if (fator_bal(raiz->dir) >= 1)
+            return rotacionar_dir_esq(raiz);
+        else
+            return rotacionar_dir_dir(raiz);
     }
+
+    return raiz;
+}
+
+void inserir_mod(tree *t, int valor) {
+    t->raiz = inserir_avl_rec(t->raiz, valor);
+}
     node *atual = t->raiz, *pai = NULL;
     while (atual) {
         pai = atual;
@@ -154,6 +178,7 @@ int rotacoes_avp = 0, mudancas_cor_avp = 0;
 Node *make_t_nill() {
     Node *n = calloc(1, sizeof(Node));
     n->color = 1; n->key = 1000;
+    n->left = n->right = n->parent = n;
     return n;
 }
 
@@ -182,7 +207,7 @@ int left_rotate(Node *x, Tree *t) {
     rotacoes_avp++;
     Node *y = x->right;
     x->right = y->left;
-    if (y->left->key != 1000) y->left->parent = x;
+    if (y->left && y->left->key != 1000) y->left->parent = x;
     y->left = x;
     y->parent = x->parent;
     x->parent = y;
@@ -196,7 +221,7 @@ int right_rotate(Node *x, Tree *t) {
     rotacoes_avp++;
     Node *y = x->left;
     x->left = y->right;
-    if (y->right->key != 1000) y->right->parent = x;
+    if (y->right && y->right->key != 1000) y->right->parent = x;
     y->right = x;
     y->parent = x->parent;
     x->parent = y;
