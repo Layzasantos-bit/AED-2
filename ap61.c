@@ -1,3 +1,4 @@
+// AP06 - Comparação entre Árvores AVL e Vermelho-Preto (AVP)
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -13,12 +14,14 @@ typedef struct {
 
 int rotacoes_avl = 0;
 
+// Inicializa árvore AVL
 tree *init_tree() {
     tree *t = malloc(sizeof(tree));
     t->raiz = NULL;
     return t;
 }
 
+// Cria novo nó AVL
 node *init_node(int valor) {
     node *n = malloc(sizeof(node));
     n->valor = valor;
@@ -26,11 +29,21 @@ node *init_node(int valor) {
     return n;
 }
 
+// Altura de um nó
 int altura(node *n) {
     if (!n) return 0;
     int ae = altura(n->esq);
     int ad = altura(n->dir);
     return (ae > ad ? ae : ad) + 1;
+}
+
+// Rotações clássicas AVL
+node *rot_dir(node *y) {
+    rotacoes_avl++;
+    node *x = y->esq;
+    y->esq = x->dir;
+    x->dir = y;
+    return x;
 }
 
 node *rot_esq(node *y) {
@@ -41,14 +54,7 @@ node *rot_esq(node *y) {
     return x;
 }
 
-node *rot_dir(node *y) {
-    rotacoes_avl++;
-    node *x = y->esq;
-    y->esq = x->dir;
-    x->dir = y;
-    return x;
-}
-
+// Insere e balanceia AVL
 node *inserir_avl(node *n, int valor) {
     if (!n) return init_node(valor);
     if (valor < n->valor)
@@ -57,7 +63,7 @@ node *inserir_avl(node *n, int valor) {
         n->dir = inserir_avl(n->dir, valor);
     else
         return n;
-    
+
     int fb = altura(n->esq) - altura(n->dir);
     if (fb > 1) {
         if (valor < n->esq->valor)
@@ -81,10 +87,12 @@ void inserir_mod(tree *t, int valor) {
     t->raiz = inserir_avl(t->raiz, valor);
 }
 
+// Altura de subárvore AVL
 int altura_sub(node *r) {
     return r ? altura(r) : 0;
 }
 
+// Libera memória AVL
 void liberar_avl(node *n) {
     if (!n) return;
     liberar_avl(n->esq);
@@ -97,7 +105,7 @@ void liberar_memoria(tree *t) {
     free(t);
 }
 
-// ------------------------------ AVP ------------------------------
+// ------------------------------ AVP (Red-Black) ------------------------------
 typedef struct Node {
     int key, color; // 0=red, 1=black
     struct Node *left, *right, *parent;
@@ -105,89 +113,90 @@ typedef struct Node {
 
 typedef struct {
     Node *root;
-    Node *nil;
 } Tree;
 
-int rotacoes_avp = 0, mudancas_cor_avp = 0;
+int rotacoes_avp = 0;
+int mudancas_cor_avp = 0;
 
+// Nó nil (sentinela)
 Node *make_nil() {
     Node *n = calloc(1, sizeof(Node));
     n->color = 1;
     n->key = 0;
-    n->left = n->right = n->parent = NULL;
+    n->left = n->right = n->parent = n;
     return n;
 }
 
-Tree *make_tree() {
+Tree *make_tree(Node *nil) {
     Tree *t = calloc(1, sizeof(Tree));
-    t->nil = make_nil();
-    t->root = t->nil;
+    t->root = nil;
     return t;
 }
 
-void left_rotate(Tree *t, Node *x) {
+// Rotações Red-Black
+void left_rotate(Node *x, Tree *t, Node *nil) {
     rotacoes_avp++;
     Node *y = x->right;
     x->right = y->left;
-    if (y->left != t->nil) y->left->parent = x;
+    if (y->left != nil) y->left->parent = x;
     y->parent = x->parent;
-    if (x->parent == t->nil) t->root = y;
+    if (x->parent == nil) t->root = y;
     else if (x == x->parent->left) x->parent->left = y;
     else x->parent->right = y;
     y->left = x;
     x->parent = y;
 }
 
-void right_rotate(Tree *t, Node *x) {
+void right_rotate(Node *x, Tree *t, Node *nil) {
     rotacoes_avp++;
     Node *y = x->left;
     x->left = y->right;
-    if (y->right != t->nil) y->right->parent = x;
+    if (y->right != nil) y->right->parent = x;
     y->parent = x->parent;
-    if (x->parent == t->nil) t->root = y;
+    if (x->parent == nil) t->root = y;
     else if (x == x->parent->right) x->parent->right = y;
     else x->parent->left = y;
     y->right = x;
     x->parent = y;
 }
 
-void rb_fixup(Tree *t, Node *z) {
+// Fixup após inserção
+void rb_fixup(Node *z, Tree *t, Node *nil) {
     while (z->parent->color == 0) {
+        Node *y;
         if (z->parent == z->parent->parent->left) {
-            Node *y = z->parent->parent->right;
+            y = z->parent->parent->right;
             if (y->color == 0) {
-                z->parent->color = 1;
-                y->color = 1;
+                z->parent->color = y->color = 1;
                 z->parent->parent->color = 0;
                 mudancas_cor_avp += 3;
                 z = z->parent->parent;
             } else {
                 if (z == z->parent->right) {
                     z = z->parent;
-                    left_rotate(t, z);
+                    left_rotate(z, t, nil);
                 }
                 z->parent->color = 1;
                 z->parent->parent->color = 0;
                 mudancas_cor_avp += 2;
-                right_rotate(t, z->parent->parent);
+                right_rotate(z->parent->parent, t, nil);
             }
         } else {
-            Node *y = z->parent->parent->left;
+            y = z->parent->parent->left;
             if (y->color == 0) {
-                z->parent->color = 1;
-                y->color = 1;
+                z->parent->color = y->color = 1;
                 z->parent->parent->color = 0;
                 mudancas_cor_avp += 3;
                 z = z->parent->parent;
             } else {
                 if (z == z->parent->left) {
                     z = z->parent;
-                    right_rotate(t, z);
+                    right_rotate(z, t, nil);
                 }
                 z->parent->color = 1;
                 z->parent->parent->color = 0;
                 mudancas_cor_avp += 2;
-                left_rotate(t, z->parent->parent);
+                left_rotate(z->parent->parent, t, nil);
             }
         }
     }
@@ -197,30 +206,26 @@ void rb_fixup(Tree *t, Node *z) {
     }
 }
 
-void rb_insert(Tree *t, int key) {
+// Insere nó e conta mudança inicial
+void rb_insert(Tree *t, int key, Node *nil) {
+    Node *y = nil, *x = t->root;
+    while (x != nil) {
+        y = x;
+        x = (key < x->key) ? x->left : x->right;
+    }
     Node *z = calloc(1, sizeof(Node));
     z->key = key;
     z->color = 0;
-    mudancas_cor_avp++;
-    z->left = z->right = t->nil;
-    
-    Node *y = t->nil;
-    Node *x = t->root;
-    
-    while (x != t->nil) {
-        y = x;
-        if (key < x->key) x = x->left;
-        else x = x->right;
-    }
-    
+    mudancas_cor_avp++; // coloração inicial
+    z->left = z->right = nil;
     z->parent = y;
-    if (y == t->nil) t->root = z;
+    if (y == nil) t->root = z;
     else if (key < y->key) y->left = z;
     else y->right = z;
-    
-    rb_fixup(t, z);
+    rb_fixup(z, t, nil);
 }
 
+// Altura contando nós reais (nil → 0)
 int altura_no(Node *n, Node *nil) {
     if (n == nil) return 0;
     int ae = altura_no(n->left, nil);
@@ -228,6 +233,7 @@ int altura_no(Node *n, Node *nil) {
     return (ae > ad ? ae : ad) + 1;
 }
 
+// Altura negra
 int altura_negra(Node *n, Node *nil) {
     if (n == nil) return 0;
     int e = altura_negra(n->left, nil);
@@ -235,6 +241,7 @@ int altura_negra(Node *n, Node *nil) {
     return (e > d ? e : d) + (n->color == 1);
 }
 
+// Libera memória AVP
 void liberar_avp(Node *n, Node *nil) {
     if (n == nil) return;
     liberar_avp(n->left, nil);
@@ -242,31 +249,31 @@ void liberar_avp(Node *n, Node *nil) {
     free(n);
 }
 
-void liberar_memoria_avp(Tree *t) {
-    liberar_avp(t->root, t->nil);
-    free(t->nil);
+void liberar_memoria_avp(Tree *t, Node *nil) {
+    liberar_avp(t->root, nil);
+    free(nil);
     free(t);
 }
 
 // ------------------------------ Main ------------------------------
 int main() {
     tree *avl = init_tree();
-    Tree *avp = make_tree();
+    Node *nil = make_nil();
+    Tree *avp = make_tree(nil);
 
     int x;
-    while (scanf("%d", &x) == 1 && x >= 0) {
+    while (scanf("%d", &x) && x >= 0) {
         inserir_mod(avl, x);
-        rb_insert(avp, x);
+        rb_insert(avp, x, nil);
     }
 
     int ha = altura(avl->raiz);
-    int hae = avl->raiz ? altura(avl->raiz->esq) : 0;
-    int had = avl->raiz ? altura(avl->raiz->dir) : 0;
-    
-    int hr = altura_no(avp->root, avp->nil);
-    int hre = avp->root != avp->nil ? altura_no(avp->root->left, avp->nil) : 0;
-    int hrd = avp->root != avp->nil ? altura_no(avp->root->right, avp->nil) : 0;
-    int hnegra = altura_negra(avp->root, avp->nil);
+    int hae = altura_sub(avl->raiz->esq);
+    int had = altura_sub(avl->raiz->dir);
+    int hr = altura_no(avp->root, nil);
+    int hre = altura_no(avp->root->left, nil);
+    int hrd = altura_no(avp->root->right, nil);
+    int hnegra = altura_negra(avp->root, nil);
 
     printf("%d, %d, %d\n", ha, hae, had);
     printf("%d, %d, %d\n", hr, hre, hrd);
@@ -274,6 +281,6 @@ int main() {
     printf("%d, %d, %d\n", mudancas_cor_avp, rotacoes_avp, rotacoes_avl);
 
     liberar_memoria(avl);
-    liberar_memoria_avp(avp);
+    liberar_memoria_avp(avp, nil);
     return 0;
 }
