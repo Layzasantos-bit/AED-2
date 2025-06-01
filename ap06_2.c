@@ -206,7 +206,7 @@ int main() {
     int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) + 1 : 0;
     int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
     printf("%d, %d, %d
-", hAVL, heAVL, hdAVL);
+",   hAVL, heAVL, hdAVL);
 
     int hRBT = alturaRBT(raizRBT) + 1;
     int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
