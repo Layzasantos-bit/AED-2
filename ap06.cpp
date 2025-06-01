@@ -1,18 +1,14 @@
-/*
- * AED2 2025 (1S) - AP06 - ABBS BALANCEADAS
- * Comparação entre Árvores AVL e Vermelho-Pretas
- * Implementação em C++
- */
+
 
 #include <iostream>
 #include <algorithm>
 #include <vector>
 using namespace std;
 
-// Cores para Red-Black Tree
+
 enum Color { RED, BLACK };
 
-// Estrutura do nó para AVL
+
 struct AVLNode {
     int data;
     AVLNode* left;
@@ -22,7 +18,7 @@ struct AVLNode {
     AVLNode(int value) : data(value), left(nullptr), right(nullptr), height(1) {}
 };
 
-// Estrutura do nó para Red-Black Tree
+
 struct RBNode {
     int data;
     RBNode* left;
@@ -33,7 +29,7 @@ struct RBNode {
     RBNode(int value) : data(value), left(nullptr), right(nullptr), parent(nullptr), color(RED) {}
 };
 
-// Classe para Árvore AVL
+
 class AVLTree {
 private:
     AVLNode* root;
@@ -89,30 +85,30 @@ private:
         } else if (key > node->data) {
             node->right = insert(node->right, key);
         } else {
-            return node; // Não inserir duplicatas
+            return node; 
         }
         
         updateHeight(node);
         
         int balance = getBalance(node);
         
-        // Rotação à direita
+       
         if (balance > 1 && key < node->left->data) {
             return rotateRight(node);
         }
         
-        // Rotação à esquerda
+       
         if (balance < -1 && key > node->right->data) {
             return rotateLeft(node);
         }
         
-        // Rotação esquerda-direita
+       
         if (balance > 1 && key > node->left->data) {
             node->left = rotateLeft(node->left);
             return rotateRight(node);
         }
         
-        // Rotação direita-esquerda
+       
         if (balance < -1 && key < node->right->data) {
             node->right = rotateRight(node->right);
             return rotateLeft(node);
@@ -172,7 +168,7 @@ public:
     }
 };
 
-// Classe para Red-Black Tree
+
 class RBTree {
 private:
     RBNode* root;
@@ -325,7 +321,7 @@ public:
                 current = current->right;
             } else {
                 delete newNode;
-                return; // Não inserir duplicatas
+                return; 
             }
         }
         
@@ -385,20 +381,17 @@ int main() {
     RBTree rbTree;
     
     int value;
-    vector<int> values;
     
-    // Leitura da entrada
-    while (cin >> value && value >= 0) {
-        values.push_back(value);
+    
+    while (cin >> value) {
+        if (value < 0) {
+            break; 
+        }
+        avlTree.insert(value);
+        rbTree.insert(value);
     }
     
-    // Inserção nas árvores
-    for (int val : values) {
-        avlTree.insert(val);
-        rbTree.insert(val);
-    }
-    
-    // Saída conforme especificação
+
     cout << avlTree.getRootHeight() << ", " 
          << avlTree.getLeftSubtreeHeight() << ", " 
          << avlTree.getRightSubtreeHeight() << endl;
