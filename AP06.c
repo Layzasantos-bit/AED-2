@@ -203,16 +203,12 @@ int main() {
     int hAVL = alturaAVL(raizAVL);
     int heAVL = raizAVL->esq ? alturaAVL(raizAVL->esq) + 1 : 0;
     int hdAVL = raizAVL->dir ? alturaAVL(raizAVL->dir) + 1 : 0;
-    printf("%d, %d, %d
-", hAVL, heAVL, hdAVL);
+    printf("%d, %d, %d\n", hAVL, heAVL, hdAVL);
     int hRBT = alturaRBT(raizRBT);
     int heRBT = raizRBT->esq ? alturaRBT(raizRBT->esq) + 1 : 0;
     int hdRBT = raizRBT->dir ? alturaRBT(raizRBT->dir) + 1 : 0;
-    printf("%d, %d, %d
-", hRBT, heRBT, hdRBT);
-    printf("%d
-", alturaNegra(raizRBT));
-    printf("%d, %d, %d
-", trocasCor, rotacoesRBT, rotacoesAVL);
+    printf("%d, %d, %d\n", hRBT, heRBT, hdRBT);
+    printf("%d\n", alturaNegra(raizRBT));
+    printf("%d, %d, %d\n", trocasCor, rotacoesRBT, rotacoesAVL);
     return 0;
 }
