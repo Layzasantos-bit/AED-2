@@ -13,16 +13,24 @@ typedef struct Node {
 
 Node *NIL;
 
-// Cria um novo nó
+// Inicializa NIL e árvore
+void initialize(Node **root) {
+    NIL = (Node*)malloc(sizeof(Node));
+    NIL->color = BLACK;
+    NIL->left = NIL->right = NIL->parent = NIL;
+    *root = NIL;
+}
+
 Node* createNode(int key) {
     Node *node = (Node*)malloc(sizeof(Node));
     node->key = key;
     node->color = RED;
-    node->left = node->right = node->parent = NIL;
+    node->left = NIL;
+    node->right = NIL;
+    node->parent = NIL;
     return node;
 }
 
-// Rotação à esquerda
 void leftRotate(Node **root, Node *x) {
     Node *y = x->right;
     x->right = y->left;
@@ -35,7 +43,6 @@ void leftRotate(Node **root, Node *x) {
     x->parent = y;
 }
 
-// Rotação à direita
 void rightRotate(Node **root, Node *x) {
     Node *y = x->left;
     x->left = y->right;
@@ -48,7 +55,6 @@ void rightRotate(Node **root, Node *x) {
     x->parent = y;
 }
 
-// Corrige inserção
 void fixInsert(Node **root, Node *z) {
     while (z->parent->color == RED) {
         if (z->parent == z->parent->parent->left) {
@@ -88,7 +94,6 @@ void fixInsert(Node **root, Node *z) {
     (*root)->color = BLACK;
 }
 
-// Insere na árvore
 void insert(Node **root, int key) {
     Node *z = createNode(key);
     Node *y = NIL, *x = *root;
@@ -101,44 +106,31 @@ void insert(Node **root, int key) {
     if (y == NIL) *root = z;
     else if (z->key < y->key) y->left = z;
     else y->right = z;
-    z->left = z->right = NIL;
-    z->color = RED;
     fixInsert(root, z);
 }
 
-// Altura da árvore
 int height(Node *node) {
-    if (node == NIL) return -1;
+    if (node == NIL) return 0;
     int l = height(node->left);
     int r = height(node->right);
     return (l > r ? l : r) + 1;
 }
 
-// Altura rubro
 int redHeight(Node *node) {
     if (node == NIL) return 0;
-    int h = redHeight(node->left);
-    int r = redHeight(node->right);
-    int add = (node->color == RED ? 1 : 0);
-    return (h > r ? h : r) + add;
+    int lh = redHeight(node->left);
+    int rh = redHeight(node->right);
+    return ((lh > rh ? lh : rh) + (node->color == RED));
 }
 
-// Busca nó
 Node* search(Node *root, int key) {
-    if (root == NIL || root->key == key) return root;
-    if (key < root->key) return search(root->left, key);
-    else return search(root->right, key);
+    while (root != NIL && root->key != key) {
+        if (key < root->key) root = root->left;
+        else root = root->right;
+    }
+    return root;
 }
 
-// Inicializa NIL e raiz
-void initialize(Node **root) {
-    NIL = (Node*)malloc(sizeof(Node));
-    NIL->color = BLACK;
-    NIL->left = NIL->right = NIL->parent = NULL;
-    *root = NIL;
-}
-
-// Liberação da árvore
 void freeTree(Node *root) {
     if (root == NIL) return;
     freeTree(root->left);
@@ -149,6 +141,31 @@ void freeTree(Node *root) {
 int main() {
     Node *root;
     initialize(&root);
-    // A continuação incluirá leitura e comandos
+    int x;
+
+    // Primeira linha: inserções iniciais
+    while (scanf("%d", &x) && x >= 0) insert(&root, x);
+
+    // Imprime altura da árvore original (número de arestas)
+    printf("%d,%d,%d\n", height(root) - 1, height(root->left) - 1, height(root->right) - 1);
+
+    // Segunda linha: busca e remove se encontrar (remoção ainda não implementada)
+    while (scanf("%d", &x) && x >= 0) {
+        Node *found = search(root, x);
+        if (found != NIL) {
+            printf("%d,%d,%d\n", height(found) - 1, height(found->left) - 1, height(found->right) - 1);
+            // remoção com rebalanceamento aqui
+        } else insert(&root, x);
+    }
+
+    // Terceira linha: altura rubro
+    if (scanf("%d", &x) == 1) {
+        Node *n = search(root, x);
+        if (n == NIL) printf("Valor nao encontrado\n");
+        else printf("%d\n", redHeight(n));
+    }
+
+    freeTree(root);
+    free(NIL);
     return 0;
 }
