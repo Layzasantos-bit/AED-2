@@ -110,17 +110,14 @@ void insert(Node **root, int key) {
 int countLeft(Node *raiz) {
     Node *aux = raiz;
     int cont = 0;
-
     if (aux->left == NIL) return 0;
-    else {
-        while (aux->left != NIL) {
-            aux = aux->left;
-            cont++;
-            if (aux->left == NIL && aux->right != NIL) {
-                while (aux->right != NIL) {
-                    cont++;
-                    aux = aux->right;
-                }
+    while (aux->left != NIL) {
+        aux = aux->left;
+        cont++;
+        if (aux->left == NIL && aux->right != NIL) {
+            while (aux->right != NIL) {
+                aux = aux->right;
+                cont++;
             }
         }
     }
@@ -130,17 +127,14 @@ int countLeft(Node *raiz) {
 int countRight(Node *raiz) {
     Node *aux = raiz;
     int cont = 0;
-
     if (aux->right == NIL) return 0;
-    else {
-        while (aux->right != NIL) {
-            aux = aux->right;
-            cont++;
-            if (aux->right == NIL && aux->left != NIL) {
-                while (aux->left != NIL) {
-                    cont++;
-                    aux = aux->left;
-                }
+    while (aux->right != NIL) {
+        aux = aux->right;
+        cont++;
+        if (aux->right == NIL && aux->left != NIL) {
+            while (aux->left != NIL) {
+                aux = aux->left;
+                cont++;
             }
         }
     }
@@ -288,7 +282,7 @@ int main() {
     while (scanf("%d", &x) && x >= 0) {
         Node *n = search(root, x);
         if (n != NIL) {
-            printf("%d,%d,%d\n", height(n) - 1, height(n->left) - 1, height(n->right) - 1);
+            printf("%d,%d,%d\n", height(n) - 1, countLeft(n), countRight(n));
             deleteNode(&root, n);
         } else {
             insert(&root, x);
