@@ -107,45 +107,37 @@ void insert(Node **root, int key) {
     fixInsert(root, z);
 }
 
-int countLeft(Node *raiz) {
-    Node *aux = raiz;
-    int cont = 0;
-    if (aux->left == NIL) return 0;
-    while (aux->left != NIL) {
-        aux = aux->left;
-        cont++;
-        if (aux->left == NIL && aux->right != NIL) {
-            while (aux->right != NIL) {
-                aux = aux->right;
-                cont++;
-            }
-        }
-    }
-    return cont;
-}
-
-int countRight(Node *raiz) {
-    Node *aux = raiz;
-    int cont = 0;
-    if (aux->right == NIL) return 0;
-    while (aux->right != NIL) {
-        aux = aux->right;
-        cont++;
-        if (aux->right == NIL && aux->left != NIL) {
-            while (aux->left != NIL) {
-                aux = aux->left;
-                cont++;
-            }
-        }
-    }
-    return cont;
-}
-
 int height(Node *node) {
     if (node == NIL) return 0;
     int l = height(node->left);
     int r = height(node->right);
     return (l > r ? l : r) + 1;
+}
+
+int countLeft(Node *raiz) {
+    Node *p = raiz->left;
+    int h = 0;
+    while (p != NIL) {
+        h++;
+        if (height(p->left) >= height(p->right))
+            p = p->left;
+        else
+            p = p->right;
+    }
+    return h;
+}
+
+int countRight(Node *raiz) {
+    Node *p = raiz->right;
+    int h = 0;
+    while (p != NIL) {
+        h++;
+        if (height(p->left) >= height(p->right))
+            p = p->left;
+        else
+            p = p->right;
+    }
+    return h;
 }
 
 int redHeight(Node *node) {
@@ -276,13 +268,13 @@ int main() {
 
     // Primeira linha
     while (scanf("%d", &x) && x >= 0) insert(&root, x);
-    printf("%d,%d,%d\n", height(root) - 1, countLeft(root), countRight(root));
+    printf("%d, %d, %d\n", height(root) - 1, countLeft(root), countRight(root));
 
     // Segunda linha
     while (scanf("%d", &x) && x >= 0) {
         Node *n = search(root, x);
         if (n != NIL) {
-            printf("%d,%d,%d\n", height(n) - 1, countLeft(n), countRight(n));
+            printf("%d, %d, %d\n", height(n) - 1, countLeft(n), countRight(n));
             deleteNode(&root, n);
         } else {
             insert(&root, x);
